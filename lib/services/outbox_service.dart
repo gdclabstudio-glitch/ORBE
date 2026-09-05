@@ -16,7 +16,7 @@ class OutboxService {
 
   final FirebaseFirestore _firestore;
   final StorageService _storage;
-  StreamSubscription<ConnectivityResult>? _connSub;
+  StreamSubscription<List<ConnectivityResult>>? _connSub;
   final String _key = 'social:outbox_v1';
   final String _deadLetterKey = 'social:outbox_deadletter_v1';
   bool _processing = false;
@@ -31,8 +31,8 @@ class OutboxService {
 
   void _listenConnectivity() {
     try {
-      _connSub = Connectivity().onConnectivityChanged.listen((result) {
-        if (result != ConnectivityResult.none) {
+      _connSub = Connectivity().onConnectivityChanged.listen((results) {
+        if (!results.contains(ConnectivityResult.none)) {
           _processQueue();
         }
       });
