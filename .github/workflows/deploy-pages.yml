@@ -34,7 +34,7 @@ jobs:
         run: flutter pub get
 
       - name: Build web app
-        run: flutter build web --release --base-href "/labomba_app/"
+        run: flutter build web --release --base-href "/ORBE/"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
