@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../theme/la_bomba_design_system.dart';
@@ -8,6 +6,7 @@ import '../models/social_orb.dart';
 import '../models/universe_stack.dart';
 import '../models/universe_type.dart';
 import '../widgets/orb_renderer.dart';
+import '../widgets/spatial_orb_simulation.dart';
 
 class OrbUniversePage extends StatefulWidget {
   const OrbUniversePage({super.key, required this.initialUniverse});
@@ -22,6 +21,7 @@ class _OrbUniversePageState extends State<OrbUniversePage>
     with SingleTickerProviderStateMixin {
   late UniverseStack _stack;
   late final AnimationController _entryController;
+  String? _selectedOrbId;
 
   @override
   void initState() {
@@ -121,7 +121,7 @@ class _OrbUniversePageState extends State<OrbUniversePage>
     return Center(
       child: Semantics(
         label: '${universe.title}, universo ${universe.type.name}',
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -187,20 +187,15 @@ class _OrbUniversePageState extends State<OrbUniversePage>
     return SizedBox(
       width: 300,
       height: 150,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (int index = 0; index < orbs.length; index++)
-            Positioned(
-              left: 150 + math.cos(index * 2.4) * 92 - 28,
-              top: 75 + math.sin(index * 2.4) * 44 - 28,
-              child: OrbRenderer(
-                orb: orbs[index],
-                isSelected: false,
-                onTap: () {},
-              ),
-            ),
-        ],
+      child: SpatialOrbSimulation(
+        orbs: orbs,
+        builder: (context, orb) => OrbRenderer(
+          orb: orb,
+          isSelected: _selectedOrbId == orb.id,
+          // A SocialOrb has no child-universe contract. Keep selection local
+          // until a domain projection supplies a real context and identity.
+          onTap: () => setState(() => _selectedOrbId = orb.id),
+        ),
       ),
     );
   }

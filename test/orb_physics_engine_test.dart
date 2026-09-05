@@ -139,8 +139,24 @@ void main() {
         timeSeconds: 10,
       ).single;
 
-      expect(later.physics.targetPosition.angle, isNot(first.physics.targetPosition.angle));
+      expect(later.physics.targetPosition.angle,
+          isNot(first.physics.targetPosition.angle));
       expect(later.position.x, isNot(first.position.x));
+    });
+
+    test('clamps large frame gaps while keeping positions finite and bounded',
+        () {
+      final result = engine.step(
+        orbs: [orb('paused', x: 200, y: 50)],
+        size: size,
+        deltaSeconds: 2,
+        timeSeconds: 2,
+      ).single;
+
+      expect(result.position.x.isFinite, isTrue);
+      expect(result.position.y.isFinite, isTrue);
+      expect(result.position.x, inInclusiveRange(result.position.radius, 400));
+      expect(result.position.y, inInclusiveRange(result.position.radius, 400));
     });
 
     test('score maps to smooth radius values and clamps extremes', () {

@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../theme/la_bomba_design_system.dart';
 import '../models/community_node.dart';
 import '../models/community_node_social_orb.dart';
-import '../models/social_orb.dart';
 import '../services/community_layout_service.dart';
-import '../services/orb_physics_engine.dart';
 import 'community_bubble.dart';
+import 'spatial_orb_simulation.dart';
 import 'universe_backdrop_painter.dart';
 
 class CommunityBubbleMap extends StatefulWidget {
@@ -29,29 +28,35 @@ class CommunityBubbleMap extends StatefulWidget {
   State<CommunityBubbleMap> createState() => _CommunityBubbleMapState();
 }
 
-class _CommunityBubbleMapState extends State<CommunityBubbleMap>
-    with SingleTickerProviderStateMixin {
+class _CommunityBubbleMapState extends State<CommunityBubbleMap> {
   CommunityNode? _selected;
-  late final AnimationController _animationController;
-  final OrbPhysicsEngine _physicsEngine = const OrbPhysicsEngine();
-  List<SocialOrb> _simulationOrbs = const [];
-  String _simulationKey = '';
-  Size _simulationSize = Size.zero;
-  bool _physicsFailed = false;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 16),
-    )..repeat();
+    if (widget.nodes.length == 1) {
+      _selected = widget.nodes.single;
+    }
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  void didUpdateWidget(covariant CommunityBubbleMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final selectedUid = _selected?.uid;
+    if (widget.nodes.length == 1) {
+      _selected = widget.nodes.single;
+      return;
+    }
+    if (selectedUid == null) return;
+
+    CommunityNode? replacement;
+    for (final node in widget.nodes) {
+      if (node.uid == selectedUid) {
+        replacement = node;
+        break;
+      }
+    }
+    _selected = replacement;
   }
 
   @override
@@ -62,138 +67,75 @@ class _CommunityBubbleMapState extends State<CommunityBubbleMap>
           nodes: widget.nodes,
           size: constraints.biggest,
         );
-        _ensureSimulation(positionedNodes, constraints.biggest);
-
         return InteractiveViewer(
           minScale: 0.75,
           maxScale: 1.35,
           panEnabled: true,
           scaleEnabled: true,
-          child: AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              final animatedNodes = _physicsFailed
-                  ? positionedNodes
-                  : _advanceSimulation(positionedNodes, constraints.biggest);
-              final renderedNodes = animatedNodes.toList()
-                ..sort((a, b) => b.distance.compareTo(a.distance));
-              final selectedNode = _selected;
-
-              return SizedBox(
-                width: constraints.maxWidth,
-                height: constraints.maxHeight,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: const Alignment(0, 0),
-                            radius: 1,
-                            colors: [
-                              const Color(0xFF1B1D2E).withValues(alpha: 0.25),
-                              LaBombaColors.obsidian.withValues(alpha: 0.08),
-                            ],
-                          ),
-                        ),
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, 0),
+                        radius: 1,
+                        colors: [
+                          const Color(0xFF1B1D2E).withValues(alpha: 0.25),
+                          LaBombaColors.obsidian.withValues(alpha: 0.08),
+                        ],
                       ),
                     ),
-                    const Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(painter: UniverseBackdropPainter()),
-                      ),
-                    ),
-                    ...renderedNodes.map((node) {
-                      final isSelected =
-                          _selected != null && _selected!.uid == node.uid;
-                      return Positioned(
-                        left: node.position.dx - (node.size / 2),
-                        top: node.position.dy - (node.size / 2),
-                        child: CommunityBubble(
-                          node: node,
-                          isSelected: isSelected,
-                          onTap: () {
-                            setState(() => _selected = node);
-                          },
-                          onLongPress: () {
-                            setState(() => _selected = node);
-                          },
-                          onDoubleTap: widget.onOpenUniverse == null
-                              ? null
-                              : () => widget.onOpenUniverse!(node),
-                        ),
-                      );
-                    }).toList(),
-                    if (selectedNode != null)
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 280),
-                          child: _buildPreview(selectedNode),
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
-              );
-            },
+                const Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(painter: UniverseBackdropPainter()),
+                  ),
+                ),
+                SpatialOrbSimulation(
+                  orbs: positionedNodes
+                      .map((node) => node.toSocialOrb())
+                      .toList(),
+                  builder: (context, orb) {
+                    final node = positionedNodes.firstWhere(
+                      (candidate) => candidate.uid == orb.id,
+                    );
+                    final positionedNode = node.copyWith(
+                      position: Offset(orb.position.x, orb.position.y),
+                      size: orb.position.radius * 2,
+                      distance: orb.position.distanceFromCenter,
+                      rotation: orb.position.angle,
+                    );
+                    final isSelected = _selected?.uid == node.uid;
+                    return CommunityBubble(
+                      node: positionedNode,
+                      isSelected: isSelected,
+                      onTap: () => setState(() => _selected = positionedNode),
+                      onLongPress: () =>
+                          setState(() => _selected = positionedNode),
+                      onDoubleTap: widget.onOpenUniverse == null
+                          ? null
+                          : () => widget.onOpenUniverse!(positionedNode),
+                    );
+                  },
+                ),
+                if (_selected != null)
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 280),
+                      child: _buildPreview(_selected!),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },
-    );
-  }
-
-  void _ensureSimulation(List<CommunityNode> nodes, Size size) {
-    final key = nodes.map((node) => node.uid).join('|');
-    if (key == _simulationKey && size == _simulationSize) return;
-
-    _simulationKey = key;
-    _simulationSize = size;
-    _physicsFailed = false;
-    if (_selected != null && !nodes.any((node) => node.uid == _selected!.uid)) {
-      _selected = null;
-    }
-
-    if (nodes.length == 1) {
-      _selected = nodes.single;
-    }
-
-    _simulationOrbs = CommunityLayoutService.layoutOrbs(
-      orbs: nodes.map((node) => node.toSocialOrb()).toList(),
-      size: size,
-    );
-  }
-
-
-  List<CommunityNode> _advanceSimulation(
-    List<CommunityNode> fallbackNodes,
-    Size size,
-  ) {
-    try {
-      _simulationOrbs = _physicsEngine.step(
-        orbs: _simulationOrbs,
-        size: size,
-        timeSeconds: _animationController.value * 16,
-      );
-      final byId = <String, SocialOrb>{
-        for (final orb in _simulationOrbs) orb.id: orb,
-      };
-      return [
-        for (final node in fallbackNodes)
-          _nodeWithOrbPosition(node, byId[node.uid]),
-      ];
-    } catch (_) {
-      _physicsFailed = true;
-      return fallbackNodes;
-    }
-  }
-
-  CommunityNode _nodeWithOrbPosition(CommunityNode node, SocialOrb? orb) {
-    if (orb == null) return node;
-    return node.copyWith(
-      position: Offset(orb.position.x, orb.position.y),
-      size: orb.position.radius * 2,
-      distance: orb.position.distanceFromCenter,
-      rotation: orb.position.angle,
     );
   }
 
