@@ -119,6 +119,30 @@ void main() {
       expect(result.position.x, lessThan(350));
     });
 
+    test('gives non-center orbs a subtle deterministic orbital drift', () {
+      final initial = orb('orbiting', x: 100, y: 200).copyWith(
+        position: const OrbPosition(
+          x: 100,
+          y: 200,
+          angle: 0.8,
+          radius: 20,
+        ),
+      );
+      final first = engine.step(
+        orbs: [initial],
+        size: size,
+        timeSeconds: 0,
+      ).single;
+      final later = engine.step(
+        orbs: [initial],
+        size: size,
+        timeSeconds: 10,
+      ).single;
+
+      expect(later.physics.targetPosition.angle, isNot(first.physics.targetPosition.angle));
+      expect(later.position.x, isNot(first.position.x));
+    });
+
     test('score maps to smooth radius values and clamps extremes', () {
       expect(OrbPhysicsEngine.radiusForScore(0), 19);
       expect(OrbPhysicsEngine.radiusForScore(1), 40);

@@ -94,6 +94,43 @@ void main() {
         startsWith('Pessoa: Centro, centro do universo'));
     semantics.dispose();
   });
+
+  testWidgets('uses depth to keep distant orbs readable but less luminous',
+      (tester) async {
+    await tester.pumpWidget(
+      _host(
+        Row(
+          children: [
+            OrbRenderer(
+              orb: fixture(OrbType.person).copyWith(
+                position: const OrbPosition(
+                  radius: 28,
+                  depth: 0.9,
+                  scale: 0.94,
+                ),
+              ),
+              isSelected: false,
+              onTap: () {},
+            ),
+            OrbRenderer(
+              orb: fixture(OrbType.person).copyWith(
+                position: const OrbPosition(
+                  radius: 28,
+                  depth: 0.1,
+                  scale: 1,
+                ),
+              ),
+              isSelected: false,
+              onTap: () {},
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(find.byType(OrbRenderer), findsNWidgets(2));
+    expect(find.text('T'), findsNWidgets(2));
+  });
 }
 
 Widget _host(Widget child) => MaterialApp(home: Scaffold(body: child));

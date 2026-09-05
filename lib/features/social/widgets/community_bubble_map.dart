@@ -7,6 +7,7 @@ import '../models/social_orb.dart';
 import '../services/community_layout_service.dart';
 import '../services/orb_physics_engine.dart';
 import 'community_bubble.dart';
+import 'universe_backdrop_painter.dart';
 
 class CommunityBubbleMap extends StatefulWidget {
   const CommunityBubbleMap({
@@ -97,6 +98,11 @@ class _CommunityBubbleMapState extends State<CommunityBubbleMap>
                         ),
                       ),
                     ),
+                    const Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(painter: UniverseBackdropPainter()),
+                      ),
+                    ),
                     ...renderedNodes.map((node) {
                       final isSelected =
                           _selected != null && _selected!.uid == node.uid;
@@ -146,14 +152,17 @@ class _CommunityBubbleMapState extends State<CommunityBubbleMap>
     if (_selected != null && !nodes.any((node) => node.uid == _selected!.uid)) {
       _selected = null;
     }
+
     if (nodes.length == 1) {
       _selected = nodes.single;
     }
+
     _simulationOrbs = CommunityLayoutService.layoutOrbs(
       orbs: nodes.map((node) => node.toSocialOrb()).toList(),
       size: size,
     );
   }
+
 
   List<CommunityNode> _advanceSimulation(
     List<CommunityNode> fallbackNodes,

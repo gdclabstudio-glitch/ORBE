@@ -149,9 +149,13 @@ class OrbPhysicsEngine {
     double timeSeconds,
   ) {
     final seed = (orb.metadata['seed'] as int?) ?? orb.id.hashCode.abs();
-    final angle = orb.position.angle == 0
+    final baseAngle = orb.position.angle == 0
         ? (seed % 360) * math.pi / 180
         : orb.position.angle;
+    final direction = seed.isEven ? 1.0 : -1.0;
+    final orbitalSpeed =
+        (0.045 + (1 - orb.score.normalized.clamp(0, 1)) * 0.035) * direction;
+    final angle = baseAngle + timeSeconds * orbitalSpeed;
     final phase = (seed % 17) * 0.37;
     final microMotion = math.sin(timeSeconds * 0.7 + phase) * 1.8;
     return targetForScore(

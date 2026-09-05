@@ -28,7 +28,11 @@ class OrbRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = _visualSize;
     final glowColor = _glowColor;
-    final opacity = (0.82 + orb.position.scale * 0.18).clamp(0.82, 1.0);
+    final depth = orb.position.depth.clamp(0, 1).toDouble();
+    final proximity = (1 - depth).clamp(0, 1).toDouble();
+    final opacity = (0.78 + proximity * 0.22).clamp(0.78, 1.0);
+    final visualScale =
+        (0.94 + proximity * 0.06) * (isSelected ? 1.12 : 1);
 
     return GestureDetector(
       onTap: onTap,
@@ -43,7 +47,7 @@ class OrbRenderer extends StatelessWidget {
           child: AnimatedScale(
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeOutCubic,
-            scale: isSelected ? 1.12 : 1,
+            scale: visualScale,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 260),
               curve: Curves.easeOutCubic,
@@ -58,7 +62,9 @@ class OrbRenderer extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color:
-                          glowColor.withValues(alpha: isCenter ? 0.16 : 0.12),
+                          glowColor.withValues(
+                              alpha: (isCenter ? 0.18 : 0.08) +
+                                  proximity * 0.08),
                     ),
                   ),
                   Container(
@@ -132,6 +138,9 @@ class OrbRenderer extends StatelessWidget {
           ? LaBombaColors.primary
           : LaBombaColors.digitalBlue;
 
+  double get _proximity =>
+      (1 - orb.position.depth.clamp(0, 1)).clamp(0, 1).toDouble();
+
   BoxDecoration _decoration(Color glowColor) {
     final isPerson = orb.type == OrbType.person;
     return BoxDecoration(
@@ -158,10 +167,17 @@ class OrbRenderer extends StatelessWidget {
       ),
       boxShadow: [
         BoxShadow(
-          color: glowColor.withValues(alpha: isCenter ? 0.4 : 0.22),
-          blurRadius: isSelected ? 28 : 16,
-          spreadRadius: isSelected ? 4 : 0,
+          color: glowColor.withValues(
+              alpha: (isCenter ? 0.42 : 0.14) + _proximity * 0.16),
+          blurRadius: isSelected ? 28 : 10 + _proximity * 10,
+          spreadRadius: isSelected ? 4 : _proximity * 1.5,
         ),
+        if (_proximity > 0.35)
+          BoxShadow(
+            color: Colors.white.withValues(alpha: _proximity * 0.08),
+            blurRadius: 3 + _proximity * 3,
+            offset: const Offset(-2, -2),
+          ),
       ],
     );
   }
