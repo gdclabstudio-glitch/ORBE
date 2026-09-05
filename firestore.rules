@@ -1,0 +1,836 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Basic helpers
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function tokenClaimEquals(claimName, value) {
+      return isAuth() && request.auth.token != null && request.auth.token.get(claimName, null) == value;
+    }
+
+    function hasRole(roleName) {
+      return isAuth() && request.auth.token != null && (
+        request.auth.token.get('role', null) == roleName
+        || (roleName == 'owner' && request.auth.token.get('owner', null) == true)
+        || (roleName == 'admin' && request.auth.token.get('admin', null) == true)
+      );
+    }
+
+    function isOwner() {
+      return hasRole('owner') || tokenClaimEquals('owner', true);
+    }
+
+    function isAdmin() {
+      return isOwner() || hasRole('admin') || tokenClaimEquals('admin', true);
+    }
+
+    function isModerator() {
+      return isAuth() && request.auth.token != null && (
+        request.auth.token.get('role', null) == 'moderator'
+        || request.auth.token.get('moderator', null) == true
+      );
+    }
+
+    function isMaster() {
+      return isOwner();
+    }
+
+    function isSuperAdmin() { return isOwner() || isAdmin(); }
+
+    // Server/service accounts or functions should set custom claims such as owner/admin/isServer.
+    function isServer() {
+      return isAuth() && (
+        tokenClaimEquals('isServer', true)
+        || tokenClaimEquals('owner', true)
+        || tokenClaimEquals('admin', true)
+        || request.auth.uid == 'server'
+        || isSuperAdmin()
+      );
+    }
+
+    // Chat membership helper: accept both canonical participants and legacy members
+    function isChatMember(chatId) {
+      return exists(/databases/$(database)/documents/chats/$(chatId)) && (
+        (get(/databases/$(database)/documents/chats/$(chatId)).data.keys().hasAny(['participants'])
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants)
+        || (get(/databases/$(database)/documents/chats/$(chatId)).data.keys().hasAny(['members'])
+          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members)
+      );
+    }
+
+    function isPrivilegedAdminAction() {
+      return isAuth() && (isAdmin() || isServer());
+    }
+
+    // Community reads are intentionally separate from the existing mutation roles.
+    // The persisted ownerId is authoritative for community-scoped moderation reads.
+    function isCommunityOwner(communityId) {
+      return isAuth()
+        && exists(/databases/$(database)/documents/communities/$(communityId))
+        && get(/databases/$(database)/documents/communities/$(communityId)).data.ownerId == request.auth.uid;
+    }
+
+    function isCommunityStaff(communityId) {
+      return isCommunityOwner(communityId) || isAdmin() || isModerator();
+    }
+
+    function isActiveCommunityMember(communityId) {
+      return isAuth()
+        && exists(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid))
+        && get(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid)).data.communityId == communityId
+        && get(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid)).data.status == 'active';
+    }
+
+    function canAccessCommunity(communityId) {
+      return isActiveCommunityMember(communityId) || isCommunityStaff(communityId);
+    }
+
+    function validContentType(contentType) {
+      return contentType in ['fact', 'opinion', 'hypothesis', 'discussion', 'question', 'interpretation'];
+    }
+
+    function validContentLifecycle(lifecycle) {
+      return lifecycle in ['active', 'underReview', 'restricted', 'corrected', 'archived'];
+    }
+
+    function validSourceType(sourceType) {
+      return sourceType in ['scientificArticle', 'book', 'institutionalDocument', 'historicalSource', 'officialWebsite', 'interview', 'publicDocument', 'other'];
+    }
+
+    function validEvidenceType(evidenceType) {
+      return evidenceType in ['scientificStudy', 'book', 'institutionalDocument', 'historicalSource', 'officialWebsite', 'interview', 'publicDocument', 'observation', 'other'];
+    }
+
+    function validEvidencePosition(position) {
+      return position in ['supports', 'challenges', 'contextualizes'];
+    }
+
+    function contentCommunity(contentId) {
+      return get(/databases/$(database)/documents/community_contents/$(contentId)).data.communityId;
+    }
+
+    function canAccessContent(contentId) {
+      return exists(/databases/$(database)/documents/community_contents/$(contentId))
+        && canAccessCommunity(contentCommunity(contentId));
+    }
+
+    function canModerateCommunity(communityId) {
+      return isCommunityStaff(communityId)
+        || (isAuth()
+          && exists(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid))
+          && get(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid)).data.status == 'active'
+          && get(/databases/$(database)/documents/community_memberships/$(communityId + '::' + request.auth.uid)).data.role in ['owner', 'admin', 'moderator']);
+    }
+
+    function validReportTargetType(targetType) {
+      return targetType in ['content', 'evidence', 'source', 'correction'];
+    }
+
+    function validReportReason(reason) {
+      return reason in ['misinformation', 'fabricatedEvidence', 'misleadingSource', 'harassment', 'spam', 'offTopic', 'other'];
+    }
+
+    function validReportStatus(status) {
+      return status in ['open', 'underReview', 'resolved'];
+    }
+
+    function validReportResolution(resolution) {
+      return resolution in ['noAction', 'warning', 'restrictContent', 'archiveContent', 'requestCorrection', 'dismissReport'];
+    }
+
+    function reportTargetMatchesCommunity(targetType, targetId, parentContentId, communityId) {
+      return (targetType == 'content'
+          && exists(/databases/$(database)/documents/community_contents/$(targetId))
+          && get(/databases/$(database)/documents/community_contents/$(targetId)).data.communityId == communityId)
+        || (targetType == 'evidence'
+          && parentContentId is string
+          && exists(/databases/$(database)/documents/community_contents/$(parentContentId))
+          && get(/databases/$(database)/documents/community_contents/$(parentContentId)).data.communityId == communityId
+          && exists(/databases/$(database)/documents/community_contents/$(parentContentId)/evidences/$(targetId)))
+        || (targetType == 'correction'
+          && parentContentId is string
+          && exists(/databases/$(database)/documents/community_contents/$(parentContentId))
+          && get(/databases/$(database)/documents/community_contents/$(parentContentId)).data.communityId == communityId
+          && exists(/databases/$(database)/documents/community_contents/$(parentContentId)/content_corrections/$(targetId)))
+        || (targetType == 'source'
+          && exists(/databases/$(database)/documents/communities/$(communityId)/sources/$(targetId)));
+    }
+
+    function validLifecycleTransition(previousLifecycle, nextLifecycle) {
+      return (previousLifecycle == 'active'
+          && nextLifecycle in ['underReview', 'restricted', 'archived'])
+        || (previousLifecycle == 'underReview'
+          && nextLifecycle in ['active', 'restricted', 'corrected', 'archived'])
+        || (previousLifecycle == 'restricted'
+          && nextLifecycle in ['active', 'corrected', 'archived'])
+        || (previousLifecycle == 'corrected'
+          && nextLifecycle in ['active', 'archived'])
+        || (previousLifecycle == 'archived' && nextLifecycle == 'archived');
+    }
+
+    function affectedUser(targetType, targetId, parentContentId, communityId) {
+      return targetType == 'content'
+          ? get(/databases/$(database)/documents/community_contents/$(targetId)).data.createdBy
+          : targetType == 'source'
+              ? get(/databases/$(database)/documents/communities/$(communityId)/sources/$(targetId)).data.createdBy
+              : get(/databases/$(database)/documents/community_contents/$(parentContentId)).data.createdBy;
+    }
+
+    function actionTargetMatchesCommunity(targetType, targetId, parentContentId, communityId) {
+      return targetType == 'report'
+          ? exists(/databases/$(database)/documents/community_reports/$(targetId))
+            && get(/databases/$(database)/documents/community_reports/$(targetId)).data.communityId == communityId
+          : targetType == 'appeal'
+              ? exists(/databases/$(database)/documents/community_moderation_appeals/$(targetId))
+                && get(/databases/$(database)/documents/community_moderation_appeals/$(targetId)).data.communityId == communityId
+          : reportTargetMatchesCommunity(targetType, targetId, parentContentId, communityId);
+    }
+
+    // Restrict which profile fields clients may change.
+    // Privacy and follower state are user-owned and must be mutable only by the owner.
+    function allowedProfileKeys(newData) {
+      return newData.keys().hasOnly([
+        'displayName',
+        'bio',
+        'avatarUrl',
+        'settings',
+        'updatedAt',
+        'language',
+        'private',
+        'following',
+        'followers',
+        'outgoingFollowRequests',
+        'incomingFollowRequests',
+        'blocked',
+        'muted'
+      ]);
+    }
+
+    function unchanged(fieldName) {
+      return resource != null && request.resource.data[fieldName] == resource.data[fieldName];
+    }
+
+    function canReadUserProfile(userId) {
+      return isAuth() && (
+        request.auth.uid == userId
+        || isServer()
+        || isAdmin()
+        || !exists(/databases/$(database)/documents/users/$(userId))
+        || !get(/databases/$(database)/documents/users/$(userId)).data.private
+        || request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.followers
+      );
+    }
+
+    match /admin_profiles/{uid} {
+      allow read: if isAuth() && (request.auth.uid == uid || isOwner() || isAdmin());
+      allow create, update, delete: if isServer();
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      // read: only owner, followers, or public profiles. Private users hide profile data from non-followers.
+      allow read: if canReadUserProfile(userId);
+
+      // create only for the authenticated user during signup flows
+      allow create: if isAuth() && request.auth.uid == userId;
+
+      // update: only the owner and only allowed keys
+      allow update: if isAuth() && request.auth.uid == userId
+                     && allowedProfileKeys(request.resource.data)
+                     && unchanged('roles')
+                     && unchanged('permissions')
+                     && unchanged('role')
+                     && unchanged('authorId')
+                     && unchanged('ownerId');
+
+      // delete: not allowed from client (require admin/backend)
+      allow delete: if isServer();
+
+      // Notifications: only server/administrator can create notifications for a user.
+      match /notifications/{noteId} {
+        allow read: if isAuth() && request.auth.uid == userId;
+        allow create: if isServer();
+        allow update: if isAuth() && request.auth.uid == userId; // user can mark read/archived
+        allow delete: if isServer() || (isAuth() && request.auth.uid == userId);
+      }
+
+      // Stories: user-owned stories, ephemeral (24h)
+      match /stories/{storyId} {
+        allow create: if isAuth() && (
+          (request.auth.uid == userId
+            && request.resource.data.userId == userId
+            && request.resource.data.createdAt == request.time)
+          || isServer()
+        );
+        allow update: if isAuth() && (
+          (request.auth.uid == userId
+            && request.resource.data.userId == resource.data.userId
+            && request.resource.data.createdAt == resource.data.createdAt)
+          || isServer()
+        );
+        allow delete: if isAuth() && (request.auth.uid == userId || isServer());
+
+        // reading: only if not expired and respecting private accounts (owner or follower or public)
+        allow read: if isAuth()
+                    && resource.data.createdAt >= request.time - duration.value(24, 'h')
+                    && (
+                      request.auth.uid == userId
+                      || isServer()
+                      || isAdmin()
+                      || !get(/databases/$(database)/documents/users/$(userId)).data.private
+                      || request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.followers
+                    );
+
+        // reactions under story: ensure user writes only their own reaction doc
+        match /reactions/{reactionId} {
+          allow create: if isAuth() && request.auth.uid == request.resource.data.userId
+                        && reactionId.matches('^' + request.auth.uid + '.*');
+          allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+          allow read: if isAuth();
+        }
+
+        // viewers: records of who viewed — ensure only the viewer can write their own view
+        match /views/{viewerId} {
+          allow create: if isAuth() && request.auth.uid == viewerId && request.resource.data.viewerId == viewerId;
+          allow read: if isAuth() && (request.auth.uid == userId || request.auth.uid == viewerId);
+          allow delete: if isServer() || (isAuth() && request.auth.uid == userId);
+        }
+      }
+
+      match /followers/{followerId} {
+        allow read: if isAuth() && (request.auth.uid == userId || request.auth.uid == followerId || isServer() || isAdmin());
+        allow create: if isAuth() && request.auth.uid == followerId && request.resource.data.followerId == followerId && request.resource.data.createdAt is timestamp;
+        allow delete: if isAuth() && (request.auth.uid == userId || request.auth.uid == followerId || isServer());
+      }
+
+      match /following/{followedId} {
+        allow read: if isAuth() && (request.auth.uid == userId || request.auth.uid == followedId || isServer() || isAdmin());
+        allow create: if isAuth() && request.auth.uid == userId && request.resource.data.userId == userId && request.resource.data.followingId == followedId && request.resource.data.createdAt is timestamp;
+        allow delete: if isAuth() && (request.auth.uid == userId || request.auth.uid == followedId || isServer());
+      }
+
+      match /outgoingFollowRequests/{targetId} {
+        allow read: if isAuth() && (request.auth.uid == userId || isServer() || isAdmin());
+        allow create: if isAuth() && request.auth.uid == userId && request.resource.data.requesterId == userId && request.resource.data.targetId == targetId && request.resource.data.createdAt is timestamp;
+        allow delete: if isAuth() && (request.auth.uid == userId || isServer());
+      }
+
+      match /incomingFollowRequests/{requesterId} {
+        allow read: if isAuth() && (request.auth.uid == userId || isServer() || isAdmin());
+        allow create: if isAuth() && request.auth.uid == userId && request.resource.data.requesterId == requesterId && request.resource.data.targetId == userId && request.resource.data.createdAt is timestamp;
+        allow delete: if isAuth() && (request.auth.uid == userId || isServer());
+      }
+    }
+
+    // --- Posts ---
+    match /posts/{postId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && (request.resource.data.authorId == request.auth.uid || isServer());
+      allow update: if isAuth() && (
+        (request.auth.uid == resource.data.authorId
+          && request.resource.data.authorId == resource.data.authorId
+          && unchanged('authorId'))
+        || tokenClaimEquals('admin', true)
+        || isServer()
+      );
+      allow delete: if isAuth() && (request.auth.uid == resource.data.authorId || tokenClaimEquals('admin', true) || isServer());
+
+      // Reactions as subcollection: ensure user only creates reaction docs for themselves
+      match /reactions/{reactionId} {
+        allow create: if isAuth() && request.auth.uid == request.resource.data.userId && reactionId.matches('^' + request.auth.uid + '.*');
+        allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+        allow read: if isAuth();
+      }
+
+      match /likes/{userId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && request.auth.uid == userId && request.resource.data.userId == userId && request.resource.data.createdAt is timestamp;
+        allow delete: if isAuth() && request.auth.uid == userId;
+      }
+
+      // Comments as subcollection (recommended over arrays)
+      match /comments/{commentId} {
+        allow create: if isAuth() && request.auth.uid == request.resource.data.authorId;
+        allow update: if isAuth() && request.auth.uid == resource.data.authorId && request.resource.data.authorId == resource.data.authorId;
+        allow delete: if isAuth() && (request.auth.uid == resource.data.authorId || tokenClaimEquals('admin', true));
+
+        match /reactions/{reactionId} {
+          allow create: if isAuth() && request.auth.uid == request.resource.data.userId && reactionId.matches('^' + request.auth.uid + '.*');
+          allow delete: if isAuth() && request.auth.uid == resource.data.userId;
+          allow read: if isAuth();
+        }
+      }
+    }
+
+    // --- Chats ---
+    match /chats/{chatId} {
+      // Chat documents must include the creator in either the canonical participants array
+      // or the legacy members array. This preserves compatibility while normalizing access.
+      allow read: if isAuth() && isChatMember(chatId);
+      allow create: if isAuth() && (
+        (request.resource.data.participants is list && request.auth.uid in request.resource.data.participants)
+        || (request.resource.data.members is list && request.auth.uid in request.resource.data.members)
+      );
+      allow delete: if isServer() || tokenClaimEquals('admin', true);
+
+      match /messages/{messageId} {
+        allow create: if isAuth() && request.resource.data.senderId == request.auth.uid && isChatMember(chatId);
+        allow read: if isAuth() && isChatMember(chatId);
+        allow update: if isAuth() && (
+          (request.auth.uid == resource.data.senderId && request.resource.data.senderId == resource.data.senderId)
+          || (request.resource.data.keys().hasOnly(['isRead','deliveredAt']) && isChatMember(chatId))
+        );
+        allow delete: if isServer() || tokenClaimEquals('admin', true);
+      }
+    }
+
+    // --- Groups / Broadcasts / Admin-only collections ---
+    match /groups/{groupId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+      allow update, delete: if tokenClaimEquals('admin', true) || (isAuth() && request.auth.uid in resource.data.admins);
+
+      match /messages/{messageId} {
+        allow create: if isAuth() && request.resource.data.senderId == request.auth.uid && (request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members);
+        allow read: if isAuth() && (request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members);
+      }
+    }
+
+    match /broadcasts/{b} {
+      allow read: if isAuth();
+      allow create, update, delete: if tokenClaimEquals('admin', true) || isServer();
+    }
+
+    // --- Community read boundary ---
+    // Visibility is not represented by the current SocialCommunity domain model.
+    // Until that contract exists, authenticated users may read metadata only.
+    match /communities/{communityId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'description',
+          'ownerId',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && (!request.resource.data.keys().hasAny(['description'])
+          || request.resource.data.description is string);
+      allow update, delete: if false;
+    }
+
+    // Active members may discover active members in their own community.
+    // Community owners and global moderators/admins may read memberships for
+    // moderation. No client writes.
+    match /community_memberships/{membershipId} {
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid
+        || isCommunityStaff(resource.data.communityId)
+        || (resource.data.status == 'active'
+          && isActiveCommunityMember(resource.data.communityId))
+      );
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'communityId',
+          'userId',
+          'role',
+          'status',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.userId == request.auth.uid
+        && membershipId == request.resource.data.communityId + '::' + request.resource.data.userId
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && (
+          (request.resource.data.role == 'member'
+            && exists(/databases/$(database)/documents/communities/$(request.resource.data.communityId))
+            && get(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.status == 'active')
+          || (request.resource.data.role == 'owner'
+            && getAfter(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.ownerId == request.auth.uid
+            && getAfter(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.createdAt == request.time)
+        );
+      allow update, delete: if false;
+    }
+
+    // Topics are discovery metadata; writes remain blocked until their product
+    // and ownership policy is approved.
+    match /topics/{topicId} {
+      allow read: if isAuth();
+      allow create, update, delete: if false;
+    }
+
+    match /community_contents/{contentId} {
+      allow read: if isAuth() && canAccessCommunity(resource.data.communityId)
+        && (!resource.data.keys().hasAny(['lifecycle'])
+          || resource.data.lifecycle != 'restricted'
+          || canModerateCommunity(resource.data.communityId));
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'contentId', 'communityId', 'type', 'title', 'body',
+          'createdBy', 'createdAt', 'updatedAt', 'lifecycle'
+        ])
+        && request.resource.data.contentId == contentId
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && exists(/databases/$(database)/documents/communities/$(request.resource.data.communityId))
+        && get(/databases/$(database)/documents/communities/$(request.resource.data.communityId)).data.status == 'active'
+        && canAccessCommunity(request.resource.data.communityId)
+        && request.resource.data.type is string
+        && validContentType(request.resource.data.type)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lifecycle == 'active';
+      allow update: if isAuth()
+        && resource.data.createdBy == request.auth.uid
+        && canAccessCommunity(resource.data.communityId)
+        && request.resource.data.keys().hasOnly([
+          'contentId', 'communityId', 'type', 'title', 'body',
+          'createdBy', 'createdAt', 'updatedAt', 'lifecycle',
+          'lifecycleUpdatedBy'
+        ])
+        && request.resource.data.contentId == resource.data.contentId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.type is string
+        && validContentType(request.resource.data.type)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.body is string
+        && request.resource.data.body.size() > 0
+        && request.resource.data.updatedAt == request.time
+        && (!request.resource.data.keys().hasAny(['lifecycle'])
+          || request.resource.data.lifecycle == resource.data.lifecycle)
+        && !request.resource.data.keys().hasAny(['lifecycleUpdatedBy']);
+      allow update: if isAuth()
+        && canModerateCommunity(resource.data.communityId)
+        && request.resource.data.keys().hasOnly([
+          'contentId', 'communityId', 'type', 'title', 'body',
+          'createdBy', 'createdAt', 'updatedAt', 'lifecycle',
+          'lifecycleUpdatedBy'
+        ])
+        && request.resource.data.contentId == resource.data.contentId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.lifecycle is string
+        && validContentLifecycle(request.resource.data.lifecycle)
+        && validLifecycleTransition(
+          resource.data.keys().hasAny(['lifecycle'])
+              ? resource.data.lifecycle
+              : 'active',
+          request.resource.data.lifecycle)
+        && request.resource.data.lifecycleUpdatedBy == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+
+      match /evidences/{evidenceId} {
+        allow read: if isAuth() && canAccessContent(contentId);
+        allow create: if isAuth()
+          && canAccessContent(contentId)
+          && request.resource.data.keys().hasOnly([
+            'evidenceId', 'contentId', 'sourceId', 'type',
+            'description', 'createdBy', 'createdAt', 'position'
+          ])
+          && request.resource.data.evidenceId == evidenceId
+          && request.resource.data.contentId == contentId
+          && canAccessCommunity(contentCommunity(contentId))
+          && request.resource.data.type is string
+          && validEvidenceType(request.resource.data.type)
+          && (!request.resource.data.keys().hasAny(['position'])
+            || (request.resource.data.position is string
+              && validEvidencePosition(request.resource.data.position)))
+          && request.resource.data.description is string
+          && request.resource.data.description.size() > 0
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && (!request.resource.data.keys().hasAny(['sourceId'])
+            || (request.resource.data.sourceId is string
+              && exists(/databases/$(database)/documents/communities/$(contentCommunity(contentId))/sources/$(request.resource.data.sourceId))));
+        allow update, delete: if false;
+      }
+
+      match /content_corrections/{correctionId} {
+        allow read: if isAuth() && canAccessContent(contentId);
+        allow create: if isAuth()
+          && canAccessContent(contentId)
+          && request.resource.data.keys().hasOnly([
+            'correctionId', 'contentId', 'explanation', 'proposedBody',
+            'createdBy', 'createdAt', 'updatedAt'
+          ])
+          && request.resource.data.correctionId == correctionId
+          && request.resource.data.contentId == contentId
+          && canAccessCommunity(contentCommunity(contentId))
+          && request.resource.data.explanation is string
+          && request.resource.data.explanation.size() > 0
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+        allow update, delete: if false;
+      }
+    }
+
+    match /communities/{communityId}/sources/{sourceId} {
+      allow read: if isAuth() && canAccessCommunity(communityId);
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'sourceId', 'title', 'type', 'locator', 'author', 'publisher',
+          'createdBy', 'createdAt'
+        ])
+        && request.resource.data.sourceId == sourceId
+        && canAccessCommunity(communityId)
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.type is string
+        && validSourceType(request.resource.data.type)
+        && request.resource.data.locator is string
+        && request.resource.data.locator.size() > 0
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /community_reports/{reportId} {
+      allow read: if isAuth() && canModerateCommunity(resource.data.communityId);
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'reportId', 'communityId', 'targetType', 'targetId', 'parentContentId', 'reason',
+          'description', 'reportedBy', 'createdAt', 'status'
+        ])
+        && request.resource.data.reportId == reportId
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.targetType is string
+        && validReportTargetType(request.resource.data.targetType)
+        && request.resource.data.targetId is string
+        && request.resource.data.targetId.size() > 0
+        && reportTargetMatchesCommunity(
+          request.resource.data.targetType,
+          request.resource.data.targetId,
+          request.resource.data.parentContentId,
+          request.resource.data.communityId)
+        && canAccessCommunity(request.resource.data.communityId)
+        && request.resource.data.reason is string
+        && validReportReason(request.resource.data.reason)
+        && (!request.resource.data.keys().hasAny(['description'])
+          || request.resource.data.description is string)
+        && request.resource.data.reportedBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'open';
+      allow update: if isAuth()
+        && canModerateCommunity(resource.data.communityId)
+        && resource.data.status == 'open'
+        && request.resource.data.keys().hasOnly([
+          'reportId', 'communityId', 'targetType', 'targetId', 'parentContentId', 'reason',
+          'description', 'reportedBy', 'createdAt', 'status', 'reviewedBy',
+          'reviewedAt', 'resolution'
+        ])
+        && request.resource.data.reportId == resource.data.reportId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.targetType == resource.data.targetType
+        && request.resource.data.targetId == resource.data.targetId
+        && ((!resource.data.keys().hasAny(['parentContentId'])
+              && !request.resource.data.keys().hasAny(['parentContentId']))
+          || request.resource.data.parentContentId == resource.data.parentContentId)
+        && request.resource.data.reason == resource.data.reason
+        && request.resource.data.reportedBy == resource.data.reportedBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status == 'resolved'
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.resolution is string
+        && validReportResolution(request.resource.data.resolution);
+      allow delete: if false;
+    }
+
+    match /community_moderation_actions/{actionId} {
+      allow read: if isAuth() && canModerateCommunity(resource.data.communityId);
+      allow create: if isAuth()
+        && (canModerateCommunity(request.resource.data.communityId)
+          || (request.resource.data.actionType == 'appealCreated'
+            && isActiveCommunityMember(request.resource.data.communityId)))
+        && request.resource.data.keys().hasOnly([
+          'actionId', 'communityId', 'actorId', 'actionType', 'targetType',
+          'targetId', 'parentContentId', 'reportId', 'appealId', 'reason',
+          'previousLifecycle', 'newLifecycle', 'createdAt'
+        ])
+        && request.resource.data.actionId == actionId
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.communityId is string
+        && request.resource.data.communityId.size() > 0
+        && request.resource.data.actionType in [
+          'reportCreated', 'reportResolved', 'lifecycleChanged',
+          'correctionRequested', 'appealCreated', 'appealResolved'
+        ]
+        && request.resource.data.targetType is string
+        && request.resource.data.targetId is string
+        && request.resource.data.targetId.size() > 0
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.createdAt == request.time
+        && actionTargetMatchesCommunity(
+          request.resource.data.targetType,
+          request.resource.data.targetId,
+          request.resource.data.get('parentContentId', null),
+          request.resource.data.communityId);
+      allow update, delete: if false;
+    }
+
+    match /community_moderation_appeals/{appealId} {
+      allow read: if isAuth()
+        && (resource.data.createdBy == request.auth.uid
+          || canModerateCommunity(resource.data.communityId));
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+          'appealId', 'communityId', 'targetType', 'targetId',
+          'parentContentId', 'originalActionId', 'reportId', 'createdBy',
+          'createdAt', 'reason', 'status', 'resolution', 'reviewedBy',
+          'reviewedAt', 'reviewReason'
+        ])
+        && request.resource.data.appealId == appealId
+        && request.resource.data.appealId
+            == request.resource.data.communityId + '::'
+              + request.resource.data.createdBy + '::'
+              + request.resource.data.targetType + '::'
+              + request.resource.data.targetId
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.communityId is string
+        && canAccessCommunity(request.resource.data.communityId)
+        && request.resource.data.targetType is string
+        && validReportTargetType(request.resource.data.targetType)
+        && request.resource.data.targetId is string
+        && reportTargetMatchesCommunity(
+          request.resource.data.targetType,
+          request.resource.data.targetId,
+          request.resource.data.get('parentContentId', null),
+          request.resource.data.communityId)
+        && affectedUser(
+          request.resource.data.targetType,
+          request.resource.data.targetId,
+          request.resource.data.get('parentContentId', null),
+          request.resource.data.communityId) == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.status == 'open'
+        && (!request.resource.data.keys().hasAny(['resolution'])
+          && !request.resource.data.keys().hasAny(['reviewedBy'])
+          && !request.resource.data.keys().hasAny(['reviewedAt'])
+          && !request.resource.data.keys().hasAny(['reviewReason']));
+      allow update: if isAuth()
+        && canModerateCommunity(resource.data.communityId)
+        && resource.data.status == 'open'
+        && request.resource.data.status == 'underReview'
+        && request.resource.data.keys().hasOnly([
+          'appealId', 'communityId', 'targetType', 'targetId',
+          'parentContentId', 'originalActionId', 'reportId', 'createdBy',
+          'createdAt', 'reason', 'status', 'resolution', 'reviewedBy',
+          'reviewedAt', 'reviewReason'
+        ])
+        && request.resource.data.appealId == resource.data.appealId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.targetType == resource.data.targetType
+        && request.resource.data.targetId == resource.data.targetId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (!request.resource.data.keys().hasAny(['resolution'])
+          || request.resource.data.resolution == resource.data.resolution)
+        && (!request.resource.data.keys().hasAny(['reviewedBy'])
+          || request.resource.data.reviewedBy == resource.data.reviewedBy)
+        && (!request.resource.data.keys().hasAny(['reviewedAt'])
+          || request.resource.data.reviewedAt == resource.data.reviewedAt)
+        && (!request.resource.data.keys().hasAny(['reviewReason'])
+          || request.resource.data.reviewReason == resource.data.reviewReason);
+      allow update: if isAuth()
+        && canModerateCommunity(resource.data.communityId)
+        && resource.data.status == 'underReview'
+        && request.resource.data.keys().hasOnly([
+          'appealId', 'communityId', 'targetType', 'targetId',
+          'parentContentId', 'originalActionId', 'reportId', 'createdBy',
+          'createdAt', 'reason', 'status', 'resolution', 'reviewedBy',
+          'reviewedAt', 'reviewReason'
+        ])
+        && request.resource.data.appealId == resource.data.appealId
+        && request.resource.data.communityId == resource.data.communityId
+        && request.resource.data.targetType == resource.data.targetType
+        && request.resource.data.targetId == resource.data.targetId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['underReview', 'accepted', 'rejected', 'withdrawn']
+        && request.resource.data.reviewedBy == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.reviewReason is string
+        && request.resource.data.reviewReason.size() > 0
+        && request.resource.data.resolution in ['uphold', 'overturn', 'modify']
+        && request.auth.uid != resource.data.createdBy;
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if isPrivilegedAdminAction();
+      allow create: if isAuth()
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.resourceType in ['user', 'post', 'comment', 'story', 'message', 'community', 'group', 'event', 'profile', 'other']
+        && request.resource.data.category in ['spam', 'harassment', 'hate', 'sexual_content', 'violence', 'fraud', 'impersonation', 'illegal_content', 'account_compromised', 'other']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is timestamp;
+      allow update: if isServer() || isPrivilegedAdminAction();
+      allow delete: if isServer();
+    }
+
+    match /admin_requests/{requestId} {
+      allow read: if isPrivilegedAdminAction();
+      allow create: if isPrivilegedAdminAction()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.type is string
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is timestamp;
+      allow update: if isServer() && request.resource.data.status in ['pending', 'approved', 'rejected', 'executed', 'failed'];
+      allow delete: if isServer();
+    }
+
+    match /admin_audit_logs/{logId} {
+      allow read: if isPrivilegedAdminAction();
+      allow create, update, delete: if isServer();
+    }
+
+    match /system_events/{eventId} {
+      allow read: if isPrivilegedAdminAction();
+      allow create, update, delete: if isServer();
+    }
+
+    match /system_metrics/{metricId} {
+      allow read: if isPrivilegedAdminAction();
+      allow create, update, delete: if isServer();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

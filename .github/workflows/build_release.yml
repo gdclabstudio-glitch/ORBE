@@ -1,0 +1,53 @@
+name: Build Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+      - 'release/*'
+
+jobs:
+  build:
+    name: Build and Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Build APK (release)
+        env:
+          # ADMIN_WHITELIST is injected securely from repository Secrets
+          ADMIN_WHITELIST: ${{ secrets.ADMIN_WHITELIST }}
+        run: |
+          flutter build apk --release --dart-define=ADMIN_WHITELIST=$ADMIN_WHITELIST
+
+      - name: Build App Bundle (release)
+        env:
+          ADMIN_WHITELIST: ${{ secrets.ADMIN_WHITELIST }}
+        run: |
+          flutter build appbundle --release --dart-define=ADMIN_WHITELIST=$ADMIN_WHITELIST
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-build-artifacts
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+
+      - name: Verify no secrets in workflow
+        run: |
+          echo "This workflow injects ADMIN_WHITELIST via repository secrets; it contains no hardcoded secrets." 

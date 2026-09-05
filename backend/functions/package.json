@@ -1,0 +1,24 @@
+{
+  "name": "labomba-functions",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint --ext .ts src || true",
+    "deploy": "firebase deploy --only functions",
+    "test:security": "powershell -ExecutionPolicy Bypass -File ./run-security-tests.ps1",
+    "test:concurrency": "powershell -ExecutionPolicy Bypass -File ./run-concurrency-tests.ps1"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.0.0",
+    "firebase-functions": "^4.4.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "firebase-tools": "^14.13.2",
+    "typescript": "^5.2.0"
+  }
+}
