@@ -45,6 +45,8 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 40));
+    await tester.pump(const Duration(milliseconds: 16));
+    final beforeUpdate = frames.last;
 
     currentOrb = simulationOrb(title: 'After');
     await tester.pumpWidget(
@@ -63,8 +65,22 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 40));
 
+    final afterUpdate = frames.last;
     expect(find.text('After'), findsOneWidget);
-    expect(frames.last.title, 'After');
+    expect(afterUpdate.title, 'After');
+    expect(afterUpdate.id, beforeUpdate.id);
+    expect(
+      Offset(
+        afterUpdate.position.x - beforeUpdate.position.x,
+        afterUpdate.position.y - beforeUpdate.position.y,
+      ).distance,
+      greaterThan(0),
+    );
+    expect(
+      Offset(afterUpdate.physics.velocityX, afterUpdate.physics.velocityY)
+          .distance,
+      greaterThan(0),
+    );
   });
 
   testWidgets('keeps orbital movement continuous across elapsed time',
@@ -96,5 +112,74 @@ void main() {
 
     expect(after.x, isNot(before.x));
     expect(after.y, isNot(before.y));
+  });
+
+  testWidgets('removes stale orbs and inserts new orbs without resetting peers',
+      (tester) async {
+    var currentOrbs = [
+      simulationOrb(title: 'First').copyWith(id: 'first'),
+      simulationOrb(title: 'Second').copyWith(
+        id: 'second',
+        position: const OrbPosition(angle: 1.4),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 320,
+          height: 240,
+          child: StatefulBuilder(
+            builder: (context, setState) => SpatialOrbSimulation(
+              orbs: currentOrbs,
+              builder: (_, orb) => Text(orb.title ?? ''),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 40));
+
+    currentOrbs = [
+      simulationOrb(title: 'First').copyWith(id: 'first'),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 320,
+          height: 240,
+          child: SpatialOrbSimulation(
+            orbs: currentOrbs,
+            builder: (_, orb) => Text(orb.title ?? ''),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('First'), findsOneWidget);
+    expect(find.text('Second'), findsNothing);
+
+    currentOrbs = [
+      ...currentOrbs,
+      simulationOrb(title: 'Third').copyWith(
+        id: 'third',
+        position: const OrbPosition(angle: 2.2),
+      ),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox(
+          width: 320,
+          height: 240,
+          child: SpatialOrbSimulation(
+            orbs: currentOrbs,
+            builder: (_, orb) => Text(orb.title ?? ''),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('First'), findsOneWidget);
+    expect(find.text('Third'), findsOneWidget);
   });
 }

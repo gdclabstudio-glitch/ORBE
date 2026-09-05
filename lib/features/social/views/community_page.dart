@@ -98,21 +98,27 @@ class _CommunityPageState extends State<CommunityPage> {
                   break;
                 }
               }
+              final currentUserMap =
+                  currentUserDoc?.data() ?? <String, dynamic>{};
+              final currentCloseFriends =
+                  ((currentUserMap['closeFriends'] as List<dynamic>?) ?? const [])
+                      .map((item) => item.toString())
+                      .toSet();
 
               final filteredDocs = allUsers.where((doc) {
                 final data = doc.data();
                 final name = (data['displayName'] as String?) ??
                     (data['name'] as String?) ??
                     'Usuário';
-                final tags = (data['tags'] as List<dynamic>?)?.cast<String>() ??
-                    <String>[];
-
                 final normalizedName = name.toLowerCase();
                 final matchesQuery = _query.isEmpty ||
                     normalizedName.contains(_query.toLowerCase());
-                final matchesTag = _selectedTag == null ||
-                    _selectedTag == 'Todos' ||
-                    tags.contains(_selectedTag);
+                final matchesTag = _matchesCategory(
+                  category: _selectedTag,
+                  userId: doc.id,
+                  data: data,
+                  currentCloseFriends: currentCloseFriends,
+                );
 
                 return matchesQuery && matchesTag;
               }).toList();
@@ -132,22 +138,10 @@ class _CommunityPageState extends State<CommunityPage> {
                 );
               }
 
-              final currentFriends = <String>{};
-              final currentCloseFriends = <String>{};
-              final currentUserMap =
-                  currentUserDoc?.data() ?? <String, dynamic>{};
-              if (currentUserDoc != null) {
-                currentFriends.addAll(
+              final currentFriends =
                   ((currentUserMap['friends'] as List<dynamic>?) ?? const [])
-                      .map((item) => item.toString()),
-                );
-                currentCloseFriends.addAll(
-                  ((currentUserMap['closeFriends'] as List<dynamic>?) ??
-                          const [])
-                      .map((item) => item.toString()),
-                );
-              }
-
+                      .map((item) => item.toString())
+                      .toSet();
               final nodes = <CommunityNode>[];
               final currentUserName =
                   (currentUserMap['displayName'] as String?) ??
@@ -358,6 +352,20 @@ class _CommunityPageState extends State<CommunityPage> {
         },
       ),
     );
+  }
+
+  bool _matchesCategory({
+    required String? category,
+    required String userId,
+    required Map<String, dynamic> data,
+    required Set<String> currentCloseFriends,
+  }) {
+    if (category == null || category == 'Todos') return true;
+    if (category == 'Close Friends') {
+      return currentCloseFriends.contains(userId);
+    }
+    final tags = (data['tags'] as List<dynamic>?)?.cast<String>() ?? <String>[];
+    return tags.contains(category);
   }
 }
 

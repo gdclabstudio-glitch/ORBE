@@ -51,9 +51,7 @@ class _SpatialOrbSimulationState extends State<SpatialOrbSimulation>
   @override
   void didUpdateWidget(covariant SpatialOrbSimulation oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!_sameOrbIds(oldWidget.orbs, widget.orbs)) {
-      _simulationKey = '';
-    }
+    _simulationKey = '';
   }
 
   @override
@@ -81,19 +79,34 @@ class _SpatialOrbSimulationState extends State<SpatialOrbSimulation>
   }
 
   void _ensureSimulation(Size size) {
-    final key = widget.orbs
-        .map(_physicsKeyFor)
-        .join('|');
-    if (key == _simulationKey && size == _simulationSize) {
-      _synchronizeVisualState();
+    final key = widget.orbs.map(_inputKeyFor).join('|');
+    if (key == _simulationKey &&
+        size == _simulationSize &&
+        _simulationOrbs.length == widget.orbs.length) {
       return;
     }
     _simulationKey = key;
     _simulationSize = size;
-    _simulationOrbs = CommunityLayoutService.layoutOrbs(
+    final laidOut = CommunityLayoutService.layoutOrbs(
       orbs: widget.orbs,
       size: size,
     );
+    final currentById = <String, SocialOrb>{
+      for (final orb in _simulationOrbs) orb.id: orb,
+    };
+    _simulationOrbs = [
+      for (final laidOutOrb in laidOut)
+        currentById[laidOutOrb.id]?.copyWith(
+              type: laidOutOrb.type,
+              title: laidOutOrb.title,
+              imageUrl: laidOutOrb.imageUrl,
+              score: laidOutOrb.score,
+              relationship: laidOutOrb.relationship,
+              activity: laidOutOrb.activity,
+              metadata: laidOutOrb.metadata,
+            ) ??
+            laidOutOrb,
+    ];
   }
 
   void _onTick(Duration elapsed) {
@@ -124,48 +137,16 @@ class _SpatialOrbSimulationState extends State<SpatialOrbSimulation>
     }
   }
 
-  void _synchronizeVisualState() {
-    if (_simulationOrbs.isEmpty) return;
-    final incomingById = <String, SocialOrb>{
-      for (final orb in widget.orbs) orb.id: orb,
-    };
-    final synchronized = <SocialOrb>[];
-    for (final current in _simulationOrbs) {
-      final incoming = incomingById[current.id];
-      if (incoming == null) continue;
-      synchronized.add(
-        current.copyWith(
-          type: incoming.type,
-          title: incoming.title,
-          imageUrl: incoming.imageUrl,
-          score: incoming.score,
-          activity: incoming.activity,
-          metadata: incoming.metadata,
-        ),
-      );
-    }
-    _simulationOrbs = synchronized;
-  }
-
-  String _physicsKeyFor(SocialOrb orb) {
-    final seed = orb.metadata['seed'];
+  String _inputKeyFor(SocialOrb orb) {
     return [
       orb.id,
+      orb.type,
+      orb.title,
+      orb.imageUrl,
       orb.score.normalized,
       orb.relationship,
-      orb.position.x,
-      orb.position.y,
-      orb.position.radius,
-      orb.position.angle,
-      seed,
+      orb.activity,
+      orb.metadata,
     ].join(':');
-  }
-
-  bool _sameOrbIds(List<SocialOrb> first, List<SocialOrb> second) {
-    if (first.length != second.length) return false;
-    for (int index = 0; index < first.length; index++) {
-      if (first[index].id != second[index].id) return false;
-    }
-    return true;
   }
 }

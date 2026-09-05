@@ -101,9 +101,14 @@ class _CommunityBubbleMapState extends State<CommunityBubbleMap> {
                       .map((node) => node.toSocialOrb())
                       .toList(),
                   builder: (context, orb) {
-                    final node = positionedNodes.firstWhere(
-                      (candidate) => candidate.uid == orb.id,
-                    );
+                    CommunityNode? node;
+                    for (final candidate in positionedNodes) {
+                      if (candidate.uid == orb.id) {
+                        node = candidate;
+                        break;
+                      }
+                    }
+                    if (node == null) return const SizedBox.shrink();
                     final positionedNode = node.copyWith(
                       position: Offset(orb.position.x, orb.position.y),
                       size: orb.position.radius * 2,

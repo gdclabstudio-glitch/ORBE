@@ -31,8 +31,9 @@ class OrbRenderer extends StatelessWidget {
     final depth = orb.position.depth.clamp(0, 1).toDouble();
     final proximity = (1 - depth).clamp(0, 1).toDouble();
     final opacity = (0.78 + proximity * 0.22).clamp(0.78, 1.0);
-    final visualScale =
-        (0.94 + proximity * 0.06) * (isSelected ? 1.12 : 1);
+    final visualScale = orb.position.scale.clamp(0.86, 1.08).toDouble() *
+        (0.94 + proximity * 0.06) *
+        (isSelected ? 1.12 : 1);
 
     return GestureDetector(
       onTap: onTap,
