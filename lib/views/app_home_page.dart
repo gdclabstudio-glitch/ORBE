@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../features/social/domain/community/community_read_service.dart';
+import '../features/social/domain/community/community_write_service.dart';
+import '../features/social/domain/content/community_content_repository.dart';
+import '../features/social/domain/content/community_moderation.dart';
+import '../features/social/views/community_discovery_page.dart';
+import '../services/auth_service.dart';
 import '../features/profile/user_profile_page.dart';
-import '../features/social/views/community_page.dart';
 import '../features/social/views/social_feed_page.dart';
 import '../theme/la_bomba_design_system.dart';
 
@@ -26,7 +32,7 @@ class _AppHomePageState extends State<AppHomePage> {
       icon: Icons.groups_outlined,
       selectedIcon: Icons.groups_rounded,
       label: 'Comunidade',
-      page: CommunityPage(),
+      page: const _CommunityTabPage(),
     ),
     _HomeTab(
       icon: Icons.person_outline,
@@ -148,6 +154,21 @@ class _AppHomePageState extends State<AppHomePage> {
               .toList(),
         ),
       ),
+    );
+  }
+}
+
+class _CommunityTabPage extends StatelessWidget {
+  const _CommunityTabPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return CommunityDiscoveryPage(
+      readService: context.read<CommunityReadService>(),
+      writeService: context.read<CommunityWriteService>(),
+      userId: context.read<AuthService>().currentUser?.uid,
+      contentRepository: context.read<CommunityContentRepository>(),
+      moderationRepository: context.read<CommunityModerationRepository>(),
     );
   }
 }
