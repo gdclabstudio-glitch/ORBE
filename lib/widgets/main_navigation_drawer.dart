@@ -25,7 +25,7 @@ class MainNavigationDrawer extends StatelessWidget {
             Icon(AppIcons.celebration, color: Colors.white, size: 38),
             SizedBox(height: 8),
             Text(
-              'Navegação La Bomba',
+              'Navegação ORBE',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 19,
@@ -42,7 +42,7 @@ class MainNavigationDrawer extends StatelessWidget {
       ),
       _NavigationItem(
         icon: Icons.photo_library_outlined,
-        label: 'Galeria do bloco',
+        label:         'Galeria do ORBE',
         route: '/gallery',
       ),
       _NavigationItem(icon: AppIcons.chat, label: 'Chat', route: '/chat'),
@@ -63,7 +63,7 @@ class MainNavigationDrawer extends StatelessWidget {
       ),
       _NavigationItem(
         icon: AppIcons.foliaos,
-        label: 'Foliões',
+        label: 'Membros',
         route: '/foliaos',
       ),
       _NavigationItem(

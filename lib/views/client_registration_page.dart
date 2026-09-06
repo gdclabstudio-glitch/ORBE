@@ -706,32 +706,8 @@ class _TermsDialogState extends State<_TermsDialog> {
                   controller: _scrollController,
                   physics: const BouncingScrollPhysics(),
                   child: const Text(
-                    'TERMOS DE USO, POLÍTICA DE ACESSO E REGRAS DO BLOCO – Bloco La Bomba\n\n'
-                    'Ao adquirir o ingresso para o Bloco La Bomba através deste sistema oficial e/ou ao fazer uso do abadá, caneca e pulseira, o Comprador/Folião ("Usuário") declara ter lido, compreendido e aceitado de forma expressa, irrevogável e irretratável todas as cláusulas, políticas de segurança e regras de conduta descritas abaixo:\n\n'
-                    '1. DA IDENTIDADE E RESPONSABILIDADE JURÍDICA DA PLATAFORMA E DO BLOCO\n'
-                    '1.1. O presente sistema e o Bloco La Bomba constituem uma operação unificada sob a responsabilidade de seus organizadores e desenvolvedores.\n'
-                    '1.2. O Usuário isenta integralmente os organizadores, produtores, equipe técnica e desenvolvedores do sistema de qualquer responsabilidade civil ou penal por danos materiais, corporais ou morais decorrentes de acidentes, tumultos, brigas, furtos, roubos ou casos fortuitos ocorridos antes, durante ou após a realização do bloco, ressalvadas as obrigações legais diretas da organização.\n\n'
-                    '2. DO KIT DO FOLIÃO E REGRAS DE ACESSO\n'
-                    '2.1. O ingresso dá direito à participação no Bloco La Bomba pelo período contratado, mediante o recebimento do Kit do Folião, composto por: Abadá, Caneca e Pulseira oficiais.\n'
-                    '2.2. Uso exclusivo e intransferível de abadás, pulseiras e canecas oficiais!\n'
-                    '2.3. Entrada na concentração apenas com abadá, pulseira e caneca oficiais. É terminantemente proibido o uso de materiais de outros modelos ou marcas.\n'
-                    '2.4. Responsabilidade do Material: A organização não se responsabiliza pela troca de materiais perdidos (caneca, pulseira ou abadá). A perda de qualquer um dos itens não gera direito à reposição gratuita ou emissão de segunda via.\n\n'
-                    '3. POLÍTICA DE CONSUMO, BEBIDAS E COMPARTILHAMENTO\n'
-                    '3.1. O bloco poderá disponibilizar bebidas (como cerveja, vodka, tequila e correlatos) exclusivamente aos portadores legítimos do kit oficial.\n'
-                    '3.2. Proibido Compartilhar Bebida: Passível de expulsão. Os servidores e seguranças do bloco têm total autoridade para cortar a pulseira em caso de descumprimento.\n'
-                    '3.3. Gelo Saborizado Inteligente: Monitoramento digital e visual por garçons e organizadores. O gelo permanece inteiro por 3 a 4 rodadas, sem necessidade de reposição neste intervalo.\n'
-                    '3.4. É terminantemente proibida a venda ou fornecimento de bebidas alcoólicas para menores de 18 (dezoito) anos. A organização reserva-se o direito de recusar o fornecimento de álcool a participantes com sinais extremos de embriaguez ou comportamento inadequado.\n\n'
-                    '4. CÓDIGO DE CONDUTA, SEGURANÇA E TOLERÂNCIA ZERO\n'
-                    '4.1. Tolerância Zero para Brigas: Qualquer ato de agressão física ou verbal é passível de expulsão imediata do evento, sem direito a reembolso.\n'
-                    '4.2. Respeito Obrigatório: Aos garçons, seguranças, organizadores e demais servidores do bloco.\n'
-                    '4.3. Proibido Fumar: Dentro da área de concentração do bloco.\n'
-                    '4.4. Banheiro do Bloco: Exclusivo para mulheres.\n'
-                    '4.5. O folião concorda expressamente em submeter-se a revistas de segurança na entrada, visando impedir o porte de armas, objetos cortantes, garrafas de vidro de fora ou substâncias ilícitas. O descumprimento das normas de segurança acarreta expulsão com apoio de força policial, se necessário.\n\n'
-                    '5. DIREITO DE IMAGEM E VOZ\n'
-                    '5.1. Ao participar do Bloco La Bomba, o Usuário cede de forma gratuita, irrevogável e definitiva seus direitos de imagem e voz para fins de divulgação, materiais promocionais, redes sociais e vídeos oficiais, sem gerar direito a qualquer cachê ou indenização futura.\n\n'
-                    '6. CANCELAMENTOS E LEGISLAÇÃO (CDC)\n'
-                    '6.1. O direito de arrependimento (Art. 49 do CDC) é garantido pelo prazo de até 7 (sete) dias corridos após a compra, desde que formalizado até 48 horas antes do primeiro dia do evento.\n'
-                    '6.2. Ausências ("No-show"), expulsões por infração às regras ou desistências posteriores não dão direito a qualquer tipo de reembolso.',
+                    'TERMOS DE USO E POLÍTICA DE ACESSO ORBE\n\n'
+                    'A versão legal definitiva dos Termos de Uso e da Política de Privacidade deve ser fornecida e aprovada pelos responsáveis pelo produto ORBE. Este conteúdo será atualizado quando a versão oficial estiver disponível.',
                     style: TextStyle(
                       fontSize: 14,
                       height: 1.5,

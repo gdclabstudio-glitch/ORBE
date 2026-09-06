@@ -208,7 +208,7 @@ class _GalleryItem extends StatelessWidget {
               bottom: 24,
               left: 24,
               child: Text(
-                'LaBomba\n$year',
+                'ORBE\n$year',
                 style: _labombaTextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,

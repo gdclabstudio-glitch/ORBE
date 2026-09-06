@@ -60,7 +60,7 @@ class _FoliaoDirectoryPageState extends State<FoliaoDirectoryPage> {
               ),
               Expanded(
                 child: foliaos.isEmpty
-                    ? const Center(child: Text('Nenhum folião encontrado.'))
+                    ? const Center(child: Text('Nenhum membro encontrado.'))
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
                         itemCount: foliaos.length,

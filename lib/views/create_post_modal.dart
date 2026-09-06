@@ -28,7 +28,7 @@ class _CreatePostModalState extends State<CreatePostModal> {
       if (user != null) {
         await _postService.createPost(
           userId: user.uid,
-          userName: user.displayName ?? 'Folião La Bomba',
+          userName: user.displayName ?? 'Membro ORBE',
           avatarUrl: user.photoURL,
           content: content,
         );
@@ -94,7 +94,7 @@ class _CreatePostModalState extends State<CreatePostModal> {
             maxLines: 4,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: 'O que está acontecendo no Bloco?',
+              hintText: 'O que está acontecendo no seu universo?',
               hintStyle: TextStyle(color: Colors.grey[500]),
               filled: true,
               fillColor: const Color(0xFF0B0C10),

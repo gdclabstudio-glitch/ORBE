@@ -81,7 +81,7 @@ class _BlockGalleryPageState extends State<BlockGalleryPage> {
     final filtered = _filteredMemories(memories);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Galeria do bloco')),
+      appBar: AppBar(title: const Text('Galeria do ORBE')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),

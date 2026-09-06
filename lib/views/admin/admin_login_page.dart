@@ -257,7 +257,7 @@ class _AdminLoginPageState extends State<AdminLoginPage>
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
-                                  'Acesso exclusivo para a equipe LaBomba',
+                                  'Acesso exclusivo para a equipe ORBE',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.white54),
                                 ),

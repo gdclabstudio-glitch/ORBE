@@ -150,7 +150,7 @@ class PrivacyPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'Contato: support@labomba.app',
+                    'Contato: suporte@orbe.app',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

@@ -31,9 +31,9 @@ class ShopProvider with ChangeNotifier {
 
   final Ticket _ticket = Ticket(
     id: 'PRE',
-    description: 'Pré-venda VIP\nLaBomba 2027',
+    description: 'Novidades ORBE',
     subtitle:
-        'Garanta seu lugar no maior bloco de carnaval do ano com o melhor preço e benefícios exclusivos.',
+        'Confira as novidades e benefícios disponíveis no ORBE.',
     price: 129.0,
   );
 

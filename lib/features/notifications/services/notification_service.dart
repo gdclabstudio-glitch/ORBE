@@ -23,7 +23,7 @@ class AppNotification {
     final timestamp = data['createdAt'];
     return AppNotification(
       id: document.id,
-      title: data['title'] as String? ?? 'La Bomba',
+      title: data['title'] as String? ?? 'ORBE',
       body: data['body'] as String? ?? '',
       createdAt: timestamp is Timestamp ? timestamp.toDate() : DateTime.now(),
       read: data['read'] as bool? ?? false,

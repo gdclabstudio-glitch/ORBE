@@ -75,7 +75,7 @@ class FooterSection extends StatelessWidget {
         ),
         const SizedBox(height: 32),
         Text(
-          '© $currentYear Bloco LaBomba. Todos os direitos reservados.',
+          '© $currentYear ORBE. Todos os direitos reservados.',
           textAlign: TextAlign.center,
           style: const TextStyle(color: Colors.white24, fontSize: 12),
         ),

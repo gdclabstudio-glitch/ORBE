@@ -15,7 +15,7 @@ class LaBombaExplosionOverlay extends StatefulWidget {
 
   const LaBombaExplosionOverlay({
     super.key,
-    this.message = 'LA BOMBA!',
+    this.message = 'ORBE!',
     this.onFinished,
     this.soundEnabled = true,
     this.visualEnabled = true,
@@ -25,7 +25,7 @@ class LaBombaExplosionOverlay extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    String message = 'LA BOMBA!',
+    String message = 'ORBE!',
   }) async {
     final storage = context.read<StorageService>();
     final soundEnabled =

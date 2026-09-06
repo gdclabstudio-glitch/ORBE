@@ -10,7 +10,7 @@ class BadgeGeneratorPage extends StatelessWidget {
 
   Future<void> _shareBadge(BuildContext context, String name) async {
     final text = Uri.encodeComponent(
-      'Sou Foliao Raiz da La Bomba! Vem curtir o carnaval comigo, $name.',
+      'Faço parte do ORBE! Vem compartilhar momentos comigo, $name.',
     );
     final uri = Uri.parse('https://wa.me/?text=$text');
     if (await canLaunchUrl(uri)) {
@@ -29,19 +29,19 @@ class BadgeGeneratorPage extends StatelessWidget {
     final user = context.watch<GoogleAuthProvider>().currentUserData;
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Crachá Folião Raiz')),
+        appBar: AppBar(title: const Text('Meu crachá')),
         body: const Center(child: Text('Entre para gerar seu crachá.')),
       );
     }
 
     final name = user.displayName?.trim().isNotEmpty == true
         ? user.displayName!
-        : 'Folião';
+        : 'Membro';
     final photoUrl = user.photoUrl;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Crachá Folião Raiz'),
+        title: const Text('Meu crachá'),
         actions: [UserAppBarActions()],
       ),
       body: SingleChildScrollView(
@@ -81,7 +81,7 @@ class BadgeGeneratorPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        'LA BOMBA',
+                        'ORBE',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w900,
@@ -90,7 +90,7 @@ class BadgeGeneratorPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'CARNAVAL 2027',
+                        'SEU UNIVERSO',
                         style: TextStyle(
                           color: Colors.orangeAccent,
                           fontWeight: FontWeight.w700,
@@ -124,7 +124,7 @@ class BadgeGeneratorPage extends StatelessWidget {
                           Icons.local_fire_department,
                           color: Colors.orange,
                         ),
-                        label: Text('FOLIÃO RAIZ'),
+                        label: Text('ORBE'),
                       ),
                       const Spacer(),
                       const Text(
@@ -147,7 +147,7 @@ class BadgeGeneratorPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Seu crachá está pronto para celebrar e compartilhar a energia da La Bomba.',
+              'Seu crachá está pronto para compartilhar sua energia no ORBE.',
               textAlign: TextAlign.center,
             ),
           ],

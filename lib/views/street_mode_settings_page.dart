@@ -20,7 +20,7 @@ class StreetModeSettingsPage extends StatelessWidget {
               subtitle: Text(
                 streetMode.enabled
                     ? 'Vídeos não iniciam automaticamente e animações são reduzidas.'
-                    : 'Reduza o consumo durante o bloco com um toque.',
+                    : 'Reduza o consumo durante o uso com um toque.',
               ),
               value: streetMode.enabled,
               onChanged: streetMode.setEnabled,

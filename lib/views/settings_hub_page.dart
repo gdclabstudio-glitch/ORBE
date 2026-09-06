@@ -14,7 +14,7 @@ class SettingsHubPage extends StatelessWidget {
       _SettingsSection(
         icon: AppIcons.profile,
         title: 'Perfil',
-        subtitle: 'Nome, foto e crachá Folião Raiz',
+        subtitle: 'Nome, foto e meu crachá',
         route: '/settings/profile',
       ),
       _SettingsSection(
@@ -38,7 +38,7 @@ class SettingsHubPage extends StatelessWidget {
       _SettingsSection(
         icon: Icons.battery_saver_outlined,
         title: 'Modo Rua',
-        subtitle: 'Economize bateria e dados durante o bloco',
+        subtitle: 'Economize bateria e dados durante o uso',
         route: '/settings/street-mode',
       ),
       _SettingsSection(

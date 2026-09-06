@@ -33,7 +33,7 @@ class _ContentDashboardPageState extends State<ContentDashboardPage> {
   }
 
   final _bannerTitleController = TextEditingController(
-    text: 'LA BOMBA 2027 • O MAIOR CARNAVAL',
+    text: 'ORBE • SEU UNIVERSO EM MOVIMENTO',
   );
   final _eventDateController = TextEditingController(
     text: '05 de Fevereiro de 2027',
@@ -248,9 +248,9 @@ class _ContentDashboardPageState extends State<ContentDashboardPage> {
                   width: MediaQuery.of(context).size.width > 600 ? 520 : 320,
                   height: MediaQuery.of(context).size.width > 600 ? 180 : 120,
                   color: Colors.black38,
-                  child: ('assets/images/labomba_banner.png'.startsWith('http')
+                  child: ('assets/images/icon_master.png'.startsWith('http')
                       ? CachedNetworkImage(
-                          imageUrl: 'assets/images/labomba_banner.png',
+                          imageUrl: 'assets/images/icon_master.png',
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Center(
                             child: CircularProgressIndicator(
@@ -265,7 +265,7 @@ class _ContentDashboardPageState extends State<ContentDashboardPage> {
                           ),
                         )
                       : Image.asset(
-                          'assets/images/labomba_banner.png',
+                          'assets/images/icon_master.png',
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Center(
                             child: Icon(

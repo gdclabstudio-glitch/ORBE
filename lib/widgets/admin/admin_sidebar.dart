@@ -97,7 +97,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
 
   Widget _buildCollapsedHeader() {
     return Image.asset(
-      'assets/images/labomba_banner.png',
+      'assets/images/icon_master.png',
       width: 40,
       height: 40,
       fit: BoxFit.contain,
@@ -111,7 +111,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Image.asset(
-          'assets/images/labomba_banner.png',
+          'assets/images/icon_master.png',
           width: 32,
           height: 32,
           fit: BoxFit.contain,
@@ -120,7 +120,7 @@ class _AdminSidebarState extends State<AdminSidebar> {
         ),
         const SizedBox(width: 12),
         const Text(
-          'LABOMBA',
+          'ORBE',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,

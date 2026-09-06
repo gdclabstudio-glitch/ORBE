@@ -65,11 +65,11 @@ class _HeatExplosionWidgetState extends State<HeatExplosionWidget> {
     try {
       final eventId = await _service.trigger(
         userId: userId,
-        displayName: user?.displayName ?? 'Folião',
+        displayName: user?.displayName ?? 'Membro',
       );
       _localEventIds.add(eventId);
       if (!mounted) return;
-      await LaBombaExplosionOverlay.show(context, message: 'LA BOMBA!');
+      await LaBombaExplosionOverlay.show(context, message: 'ORBE!');
     } catch (error) {
       if (mounted) {
         AppFeedback.showError(context, 'Não foi possível enviar a explosão.');

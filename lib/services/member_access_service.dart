@@ -27,7 +27,7 @@ class MemberAccessService {
       return const MemberAccessStatus(
         authenticated: false,
         authorized: false,
-        message: 'Entre com sua conta para validar sua participação no bloco.',
+        message: 'Entre com sua conta para validar seu acesso.',
       );
     }
 
@@ -73,7 +73,7 @@ class MemberAccessService {
       authenticated: true,
       authorized: false,
       message:
-          'Confirme seu e-mail ou telefone, ou aguarde a validação do abadá/ingresso pelo bloco.',
+          'Confirme seu e-mail ou telefone, ou aguarde a validação do seu acesso.',
     );
   }
 }

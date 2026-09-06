@@ -334,7 +334,7 @@ class _LaBombaAppState extends State<LaBombaApp> {
       child: Consumer<ThemeProvider>(
         builder: (context, themeProv, _) {
           return MaterialApp(
-            title: 'La Bomba 2027',
+            title: 'ORBE',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme.copyWith(
               scaffoldBackgroundColor: LaBombaColors.midnight,

@@ -22,7 +22,7 @@ class NotificationsPage extends StatelessWidget {
           actions: [UserAppBarActions()],
           bottom: const TabBar(
             tabs: [
-              Tab(text: 'Avisos do Bloco'),
+              Tab(text: 'Avisos do ORBE'),
               Tab(text: 'Interações'),
             ],
             indicatorColor: Colors.deepOrange,

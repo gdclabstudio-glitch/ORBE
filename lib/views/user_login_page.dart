@@ -129,7 +129,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF1E1B4B), // Tom profundo do azul/roxo do Bloco La Bomba
+              Color(0xFF1E1B4B),
               Color(0xFF0F172A),
               Color(0xFF090D16),
             ],
@@ -197,7 +197,7 @@ class _UserLoginPageState extends State<UserLoginPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Acesse sua conta do La Bomba',
+                          'Acesse sua conta ORBE',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Color(0xFF475569),

@@ -23,7 +23,7 @@ class _UserDashboardPageState extends State<UserDashboardPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('La Bomba - Dashboard'),
+        title: const Text('ORBE - Dashboard'),
         centerTitle: true,
         actions: [
           ValueListenableBuilder<AuthStatus>(
@@ -272,7 +272,7 @@ class _VipTab extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Garanta seu lugar no Bloco La Bomba 2027. Lotes limitados.',
+                    'Acompanhe seu universo no ORBE. Novidades em breve.',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ],
@@ -367,7 +367,7 @@ class _CommunityTab extends StatelessWidget {
                     child: Text('${index + 1}'),
                   ),
                   title: Text(
-                    'Foliao ${index + 1}',
+                    'Membro ${index + 1}',
                     style: const TextStyle(color: Colors.white),
                   ),
                   subtitle: Text(

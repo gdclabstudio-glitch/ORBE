@@ -58,7 +58,7 @@ class _SoundAlertsSettingsPageState extends State<SoundAlertsSettingsPage> {
               padding: const EdgeInsets.all(16),
               children: [
                 const Text(
-                  'Alertas La Bomba',
+                  'Alertas ORBE',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),

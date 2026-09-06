@@ -610,7 +610,7 @@ class _ControlCenterPageState extends State<ControlCenterPage>
     return AdminGuard(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('La Bomba Control Center'),
+          title: const Text('ORBE Control Center'),
           actions: const [
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),

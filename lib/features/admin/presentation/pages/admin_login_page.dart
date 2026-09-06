@@ -118,7 +118,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Painel do Bloco',
+                    'Painel ORBE',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -127,7 +127,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Insira o usuário e a senha para gerenciar os foliões.',
+                    'Insira o usuário e a senha para gerenciar os membros.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white60),
                   ),

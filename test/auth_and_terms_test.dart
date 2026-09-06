@@ -103,7 +103,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Continuar'), warnIfMissed: false);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Começar a folia'), warnIfMissed: false);
+        await tester.tap(find.text('Entrar no ORBE'), warnIfMissed: false);
         await tester.pumpAndSettle();
 
         expect(await storage.read(key: 'onboarding_completed'), '1');

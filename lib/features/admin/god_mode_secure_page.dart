@@ -545,7 +545,7 @@ class _GodModeSecurePageState extends State<GodModeSecurePage> {
                                 children: [
                                   const Expanded(
                                     child: Text(
-                                      'Ativar Abadá 2026',
+                                      'Ativar configuração de acesso',
                                       style: TextStyle(color: Colors.white),
                                     ),
                                   ),

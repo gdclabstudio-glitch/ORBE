@@ -51,7 +51,7 @@ class UserAppBarActions extends StatelessWidget {
           onPressed: () => Navigator.pushNamed(context, '/chat'),
         ),
         _QuickNavButton(
-          tooltip: 'Foliões',
+          tooltip: 'Membros',
           icon: AppIcons.foliaos,
           onPressed: () => Navigator.pushNamed(context, '/foliaos'),
         ),
@@ -113,9 +113,9 @@ class UserAppBarActions extends StatelessWidget {
             const PopupMenuItem(value: 'moderation', child: Text('Moderação')),
             const PopupMenuItem(
               value: 'badge',
-              child: Text('Meu crachá Folião Raiz'),
+              child: Text('Meu perfil'),
             ),
-            const PopupMenuItem(value: 'foliaos', child: Text('Foliões')),
+            const PopupMenuItem(value: 'foliaos', child: Text('Membros')),
             const PopupMenuItem(value: 'signout', child: Text('Sair')),
           ],
         ),

@@ -38,7 +38,7 @@ class _LandingPageState extends State<LandingPage> {
           extendBodyBehindAppBar: true,
           appBar: AppBar(
             title: Text(
-              'LABOMBA 2027',
+              'ORBE',
               style: labombaTextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w900,

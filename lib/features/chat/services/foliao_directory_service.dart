@@ -19,7 +19,7 @@ class FoliaoProfile {
     final data = document.data() ?? <String, dynamic>{};
     return FoliaoProfile(
       uid: document.id,
-      displayName: data['displayName'] as String? ?? 'Folião',
+      displayName: data['displayName'] as String? ?? 'Usuário ORBE',
       photoUrl: data['photoUrl'] as String?,
       email: data['email'] as String?,
     );

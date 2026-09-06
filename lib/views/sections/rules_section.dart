@@ -20,7 +20,7 @@ class RulesSection extends StatelessWidget {
         onPressed: () => _showRulesModal(context),
         icon: const Icon(Icons.info_outline_rounded, color: Colors.white70),
         label: const Text(
-          'TERMOS E REGRAS DO BLOCO',
+          'TERMOS E REGRAS ORBE',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -114,11 +114,11 @@ class _RulesModal extends StatelessWidget {
                     children: const [
                       _RuleItem(
                         text:
-                            'Uso exclusivo e intransferível de abadás, pulseiras e canecas oficiais!',
+                            'Use o ORBE com respeito e responsabilidade.',
                       ),
                       _RuleItem(
                         text:
-                            'Proibido Compartilhar Bebida: Passível de expulsão. Servidores do bloco têm autoridade para cortar a pulseira em caso de descumprimento.',
+                            'Não compartilhe conteúdo que viole os direitos de outras pessoas.',
                       ),
                       _RuleItem(
                         text: 'Proibido Fumar: Dentro da área de concentração.',
@@ -129,22 +129,22 @@ class _RulesModal extends StatelessWidget {
                       ),
                       _RuleItem(
                         text:
-                            'Respeito Obrigatório: Aos garçons, seguranças e servidores do bloco.',
+                            'Respeite os membros da comunidade e a equipe de suporte.',
                       ),
                       _RuleItem(
                         text:
-                            'Entrada na concentração apenas com abadá, pulseira e caneca oficiais. Proibido uso de materiais de outros modelos ou marcas.',
+                            'Publique apenas conteúdo que você tenha autorização para compartilhar.',
                       ),
                       _RuleItem(
                         text:
-                            'Responsabilidade do Material: A organização não se responsabiliza pela troca de materiais perdidos (caneca, pulseira ou abadá).',
+                            'Proteja seus dados e mantenha suas credenciais em segurança.',
                       ),
                       _RuleItem(
-                        text: 'Banheiro do Bloco: Exclusivo para mulheres.',
+                        text: 'Use os canais de denúncia quando precisar de ajuda.',
                       ),
                       _RuleItem(
                         text:
-                            'Gelo Saborizado Inteligente: Monitoramento digital e visual por garçons e organizadores. O gelo permanece inteiro por 3 a 4 rodadas, sem necessidade de reposição neste intervalo.',
+                            'Consulte os Termos de Uso oficiais quando forem disponibilizados.',
                       ),
                     ],
                   ),

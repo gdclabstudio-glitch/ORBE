@@ -60,36 +60,36 @@ class RulesSection extends StatelessWidget {
               const SizedBox(height: 32),
               const _RuleItem(
                 text:
-                    'Uso exclusivo e intransferível de abadás, pulseiras e canecas oficiais!',
+                    'Use o ORBE com respeito e responsabilidade.',
               ),
               const _RuleItem(
                 text:
-                    'Proibido Compartilhar Bebida: Passível de expulsão. Servidores do bloco têm autoridade para cortar a pulseira em caso de descumprimento.',
+                    'Não compartilhe conteúdo que viole os direitos de outras pessoas.',
               ),
               const _RuleItem(
-                text: 'Proibido Fumar: Dentro da área de concentração.',
+                text: 'Mantenha os espaços de convivência seguros e acolhedores.',
               ),
               const _RuleItem(
-                text: 'Tolerância Zero para Brigas: Passível de expulsão.',
-              ),
-              const _RuleItem(
-                text:
-                    "Respeito Obrigatório: Aos garçons, seguranças e servidores do bloco.",
+                text: 'Agressões e assédio não são permitidos.',
               ),
               const _RuleItem(
                 text:
-                    'Entrada na concentração apenas com abadá, pulseira e caneca oficiais. Proibido uso de materiais de outros modelos ou marcas.',
+                    'Respeite os membros da comunidade e a equipe de suporte.',
               ),
               const _RuleItem(
                 text:
-                    'Responsabilidade do Material: A organização não se responsabiliza pela troca de materiais perdidos (caneca, pulseira ou abadá).',
-              ),
-              const _RuleItem(
-                text: 'Banheiro do Bloco: Exclusivo para mulheres.',
+                    'Publique apenas conteúdo que você tenha autorização para compartilhar.',
               ),
               const _RuleItem(
                 text:
-                    'Gelo Saborizado Inteligente: Monitoramento digital e visual por garçons e organizadores. O gelo permanece inteiro por 3 a 4 rodadas, sem necessidade de reposição neste intervalo.',
+                    'Proteja seus dados e mantenha suas credenciais em segurança.',
+              ),
+              const _RuleItem(
+                text: 'Use os canais de denúncia quando precisar de ajuda.',
+              ),
+              const _RuleItem(
+                text:
+                    'Consulte os Termos de Uso oficiais quando forem disponibilizados.',
               ),
             ],
           ),

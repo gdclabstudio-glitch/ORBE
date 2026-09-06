@@ -158,7 +158,7 @@ class _MasterDeveloperDashboardPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Operações do Carnaval',
+            'Operações ORBE',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),

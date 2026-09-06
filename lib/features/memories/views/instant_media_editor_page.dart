@@ -89,7 +89,7 @@ class _InstantMediaEditorPageState extends State<InstantMediaEditorPage> {
       _validationMessage = value.length > _maxCaptionLength
           ? 'A legenda deve ter no máximo $_maxCaptionLength caracteres.'
           : blocked.isNotEmpty
-              ? 'Remova termos que violam as regras de convivência do bloco.'
+              ? 'Remova termos que violam as regras de convivência da comunidade.'
               : null;
     });
   }
@@ -194,7 +194,7 @@ class _InstantMediaEditorPageState extends State<InstantMediaEditorPage> {
       await context.read<MemoryProvider>().addOrUpdate(
             Memory(
               id: const Uuid().v4(),
-              title: caption.isEmpty ? 'Memória da folia' : caption,
+              title: caption.isEmpty ? 'Memória do ORBE' : caption,
               description: caption.isEmpty ? null : caption,
               imageUrls: mediaUrls,
               ownerId: context.read<GoogleAuthProvider>().currentUserData?.uid,
@@ -300,7 +300,7 @@ class _InstantMediaEditorPageState extends State<InstantMediaEditorPage> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Filtro carnavalesco',
+                'Filtro especial',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Wrap(
@@ -308,7 +308,7 @@ class _InstantMediaEditorPageState extends State<InstantMediaEditorPage> {
                 children: List.generate(
                   _filters.length,
                   (index) => ChoiceChip(
-                    label: Text(index == 0 ? 'Original' : 'Folia $index'),
+                    label: Text(index == 0 ? 'Original' : 'Momento $index'),
                     selected: _filterIndex == index,
                     onSelected: (_) => setState(() => _filterIndex = index),
                   ),

@@ -534,7 +534,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Folião ${post.postId.substring(0, 5)}',
+                      'Membro ${post.postId.substring(0, 5)}',
                       style: const TextStyle(
                         color: LaBombaColors.textPrimary,
                         fontWeight: FontWeight.w700,
@@ -595,7 +595,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
               return Text(
                 content.isNotEmpty
                     ? content
-                    : 'Momentos que valem guardar na memória da folia.',
+                    : 'Momentos que valem guardar na memória do ORBE.',
                 style: const TextStyle(
                   color: LaBombaColors.textPrimary,
                   fontSize: 15,
@@ -682,7 +682,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Folião • ${DateTime.now().difference(c.createdAt).inMinutes < 60 ? '${DateTime.now().difference(c.createdAt).inMinutes}m' : 'recentemente'}',
+                                  'Membro • ${DateTime.now().difference(c.createdAt).inMinutes < 60 ? '${DateTime.now().difference(c.createdAt).inMinutes}m' : 'recentemente'}',
                                   style: const TextStyle(
                                     color: LaBombaColors.textMuted,
                                     fontSize: 11,

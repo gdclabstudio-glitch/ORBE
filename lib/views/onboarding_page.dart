@@ -36,7 +36,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       icon: Icons.chat_bubble_outline,
       title: 'Conecte-se com a galera',
       description:
-          'Participe do grupo geral ou inicie conversas privadas com seus foliões favoritos.',
+          'Participe do grupo geral ou inicie conversas privadas com suas pessoas favoritas.',
       colors: [Color(0xFF00A8CC), Color(0xFF7C1AFF)],
     ),
   ];
@@ -128,7 +128,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       _saving
                           ? 'Preparando...'
                           : (_page == _slides.length - 1
-                              ? 'Começar a folia'
+                              ? 'Entrar no ORBE'
                               : 'Continuar'),
                     ),
                   ),

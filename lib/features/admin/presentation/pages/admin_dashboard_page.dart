@@ -38,7 +38,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('LaBomba Admin • ${_sectionTitles[_selectedIndex]}'),
+            title: Text('ORBE Admin • ${_sectionTitles[_selectedIndex]}'),
             actions: [
               const Center(
                 child: Padding(
@@ -94,7 +94,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       leading: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         child: Image.asset(
-          'assets/images/labomba_banner.png',
+          'assets/images/icon_master.png',
           width: 36,
           height: 36,
           fit: BoxFit.contain,
@@ -135,7 +135,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Image.asset(
-                    'assets/images/labomba_banner.png',
+                    'assets/images/icon_master.png',
                     width: 32,
                     height: 32,
                     fit: BoxFit.contain,
@@ -147,7 +147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'OPERAÇÃO LABOMBA',
+                    'OPERAÇÃO ORBE',
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -255,7 +255,7 @@ class _DashboardOverviewTab extends StatelessWidget {
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
                             Text(
-                              '$totalCapacity abadás no total',
+                              '$totalCapacity acessos no total',
                               style: const TextStyle(color: Colors.white54),
                             ),
                           ],
@@ -329,7 +329,7 @@ class _CriticalMetric extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '$sold abadás vendidos  •  $available disponíveis',
+              '$sold acessos registrados  •  $available disponíveis',
               style: const TextStyle(color: Colors.white60),
             ),
           ],
@@ -348,7 +348,7 @@ class _DashboardGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final cards = [
       _StatCard(
-        label: 'Abadás vendidos',
+        label: 'Acessos registrados',
         value: '${shop.totalSold}',
         detail: 'de ${shop.totalCapacity}',
         icon: Icons.confirmation_number_outlined,
@@ -366,7 +366,7 @@ class _DashboardGrid extends StatelessWidget {
         value: shop.totalSold == 0
             ? 'R\$ 0'
             : 'R\$ ${(shop.estimatedRevenue / shop.totalSold).toStringAsFixed(0)}',
-        detail: 'por abadá',
+        detail: 'por acesso',
         icon: Icons.sell_outlined,
         color: AppTheme.pink,
       ),
@@ -858,7 +858,7 @@ class _AddLotCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Crie um novo lote para vender mais abadás',
+                'Crie um novo lote para disponibilizar mais acessos',
                 style: TextStyle(color: Colors.white70),
               ),
               const SizedBox(height: 12),

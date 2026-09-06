@@ -27,7 +27,7 @@ class HeaderSection extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Text(
-          'O Carnaval\nComeça Aqui',
+          'Seu universo\ncomeça aqui',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: MediaQuery.of(context).size.width < 500 ? 38 : 48,
@@ -37,7 +37,7 @@ class HeaderSection extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         const Text(
-          'Prepare-se para a explosão de energia do Bloco LaBomba. Mais som, mais luz e a experiência que você já conhece, agora em 2027.',
+          'Entre no ORBE, compartilhe momentos e conecte-se com pessoas que fazem parte da sua energia.',
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white70, fontSize: 16, height: 1.5),
         ),

@@ -58,7 +58,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('LaBomba Admin • ${_sectionTitles[_selectedIndex]}'),
+            title: Text('ORBE Admin • ${_sectionTitles[_selectedIndex]}'),
             actions: [
               if (isMasterDeveloper)
                 TextButton.icon(

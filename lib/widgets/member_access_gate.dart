@@ -54,8 +54,8 @@ class _MemberAccessGateState extends State<MemberAccessGate> {
                   const SizedBox(height: 20),
                   Text(
                     status.authenticated
-                        ? 'Libere seu acesso à folia'
-                        : 'Área exclusiva para foliões cadastrados',
+                        ? 'Libere seu acesso ao ORBE'
+                        : 'Área exclusiva para membros cadastrados',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),

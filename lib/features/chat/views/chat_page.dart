@@ -163,7 +163,7 @@ errorWidget: (context, url, error) => const Icon(Icons.broken_image, color: Colo
         return SecureScreen(
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('La Bomba • Chat'),
+              title: const Text('ORBE • Chat'),
               backgroundColor: const Color(0xFF7C1AFF),
               actions: [UserAppBarActions()],
             ),
