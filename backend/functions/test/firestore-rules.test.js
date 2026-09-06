@@ -219,6 +219,69 @@ test('user cannot modify roles field on own user document', async () => {
   );
 });
 
+const socialRequestData = (fromUserId, toUserId, status = 'pending') => ({
+  fromUserId,
+  toUserId,
+  status,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+});
+
+const socialBlockData = (blockerId, blockedUserId) => ({
+  blockerId,
+  blockedUserId,
+  status: 'active',
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+});
+
+test('social collections reject all direct client writes', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const payload = socialRequestData('alice', 'bob');
+
+  await assertFails(alice.firestore().collection('connection_requests').doc('arbitrary').set(payload));
+  await assertFails(alice.firestore().collection('conversation_requests').doc('arbitrary').set(payload));
+  await assertFails(alice.firestore().collection('blocks').doc('arbitrary').set(socialBlockData('alice', 'bob')));
+  await assertFails(alice.firestore().collection('connections').doc('arbitrary').set({
+    userA: 'alice',
+    userB: 'bob',
+    status: 'connected',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    connectedAt: serverTimestamp(),
+  }));
+});
+
+test('social participants can read but unrelated users cannot', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const bob = testEnv.authenticatedContext('bob');
+  const charlie = testEnv.authenticatedContext('charlie');
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await context.firestore().collection('connection_requests').doc('canonical').set({
+      fromUserId: 'alice',
+      toUserId: 'bob',
+      status: 'pending',
+    });
+  });
+  await assertSucceeds(alice.firestore().collection('connection_requests').doc('canonical').get());
+  await assertSucceeds(bob.firestore().collection('connection_requests').doc('canonical').get());
+  await assertFails(charlie.firestore().collection('connection_requests').doc('canonical').get());
+});
+
+test('social documents cannot be changed or deleted directly', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await context.firestore().collection('blocks').doc('canonical').set({
+      blockerId: 'alice',
+      blockedUserId: 'bob',
+      status: 'active',
+    });
+  });
+  await assertFails(alice.firestore().collection('blocks').doc('canonical').update({ status: 'removed' }));
+  await assertFails(alice.firestore().collection('blocks').doc('canonical').delete());
+});
+
 test('private profile is not readable by unrelated user', async () => {
   const alice = testEnv.authenticatedContext('alice', { email: 'alice@example.com' });
   const bob = testEnv.authenticatedContext('bob', { email: 'bob@example.com' });

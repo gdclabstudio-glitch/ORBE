@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { executeSocialOperation } from './social_operations';
 
 // Initialize admin if not already
 if (!admin.apps.length) {
@@ -728,6 +729,10 @@ export const submitReport = functions.https.onCall(async (data, context) => {
 
   return { ok: true, reportId, status: 'pending' };
 });
+
+export const socialOperation = functions.https.onCall(async (data, context) =>
+  executeSocialOperation(data, context),
+);
 
 export const onAdminRequestCreated = functions.firestore
   .document('admin_requests/{requestId}')

@@ -2,15 +2,18 @@
   "name": "labomba-functions",
   "version": "0.1.0",
   "private": true,
+  "main": "lib/index.js",
   "engines": {
-    "node": "18"
+    "node": "22"
   },
   "scripts": {
     "build": "tsc",
     "lint": "eslint --ext .ts src || true",
     "deploy": "firebase deploy --only functions",
     "test:security": "powershell -ExecutionPolicy Bypass -File ./run-security-tests.ps1",
-    "test:concurrency": "powershell -ExecutionPolicy Bypass -File ./run-concurrency-tests.ps1"
+    "test:concurrency": "powershell -ExecutionPolicy Bypass -File ./run-concurrency-tests.ps1",
+    "test:identity": "npm run build && node --test test/social-identity.test.js",
+    "test:social-operations": "npm run build && powershell -ExecutionPolicy Bypass -File ./run-social-operation-tests.ps1"
   },
   "dependencies": {
     "firebase-admin": "^11.0.0",

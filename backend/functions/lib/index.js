@@ -33,11 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processAdminRequest = exports.assignRoleClaims = exports.submitAdminRequest = exports.onAdminAuditLogCreated = exports.onAdminRequestCreated = exports.submitReport = exports.onGroupMessageCreated = exports.onChatMessageCreated = exports.onCommentReactionCreated = exports.onPostReactionDeleted = exports.onPostReactionCreated = exports.onStoryCreated = exports.onPostCreated = exports.onUserCreated = void 0;
+exports.processAdminRequest = exports.assignRoleClaims = exports.submitAdminRequest = exports.onAdminAuditLogCreated = exports.onAdminRequestCreated = exports.socialOperation = exports.submitReport = exports.onGroupMessageCreated = exports.onChatMessageCreated = exports.onCommentReactionCreated = exports.onPostReactionDeleted = exports.onPostReactionCreated = exports.onStoryCreated = exports.onPostCreated = exports.onUserCreated = void 0;
 exports.validateAdminActionPayload = validateAdminActionPayload;
 exports.normalizeRoleName = normalizeRoleName;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
+const social_operations_1 = require("./social_operations");
 // Initialize admin if not already
 if (!admin.apps.length) {
     admin.initializeApp();
@@ -682,6 +683,7 @@ exports.submitReport = functions.https.onCall(async (data, context) => {
     }
     return { ok: true, reportId, status: 'pending' };
 });
+exports.socialOperation = functions.https.onCall(async (data, context) => (0, social_operations_1.executeSocialOperation)(data, context));
 exports.onAdminRequestCreated = functions.firestore
     .document('admin_requests/{requestId}')
     .onCreate(async (snap, context) => {
