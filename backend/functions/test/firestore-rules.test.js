@@ -120,14 +120,14 @@ test('non-admin user cannot execute administrative action', async () => {
   );
 });
 
-test('chat membership allows only named members to read and write messages', async () => {
+test('chat membership uses only canonical participants for messages', async () => {
   const alice = testEnv.authenticatedContext('alice', { email: 'alice@example.com' });
   const bob = testEnv.authenticatedContext('bob', { email: 'bob@example.com' });
   const charlie = testEnv.authenticatedContext('charlie', { email: 'charlie@example.com' });
 
   await assertSucceeds(
     alice.firestore().collection('chats').doc('test-chat').set({
-      members: ['alice', 'bob'],
+      participants: ['alice', 'bob'],
       createdAt: new Date(),
       title: 'Private chat',
     }),
@@ -176,7 +176,7 @@ test('non-participant cannot read private conversation', async () => {
 
   await assertSucceeds(
     alice.firestore().collection('chats').doc('chat-1').set({
-      members: ['alice', 'bob'],
+      participants: ['alice', 'bob'],
       createdAt: new Date(),
       title: 'Private chat',
     }),
@@ -184,6 +184,92 @@ test('non-participant cannot read private conversation', async () => {
 
   await assertFails(charlie.firestore().collection('chats').doc('chat-1').get());
   await assertSucceeds(bob.firestore().collection('chats').doc('chat-1').get());
+});
+
+test('chat creation requires a valid canonical participants array', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const bob = testEnv.authenticatedContext('bob');
+  const anonymous = testEnv.unauthenticatedContext();
+
+  await assertSucceeds(
+    alice.firestore().collection('chats').doc('valid-chat').set({
+      participants: ['alice', 'bob'],
+      createdAt: new Date(),
+    }),
+  );
+  await assertFails(
+    alice.firestore().collection('chats').doc('members-only-chat').set({
+      members: ['alice', 'bob'],
+      createdAt: new Date(),
+    }),
+  );
+  await assertFails(
+    alice.firestore().collection('chats').doc('missing-participants-chat').set({
+      createdAt: new Date(),
+    }),
+  );
+  await assertFails(
+    alice.firestore().collection('chats').doc('invalid-participants-chat').set({
+      participants: 'alice',
+      createdAt: new Date(),
+    }),
+  );
+  await assertFails(
+    alice.firestore().collection('chats').doc('creator-not-in-chat').set({
+      participants: ['bob'],
+      createdAt: new Date(),
+    }),
+  );
+  await assertFails(bob.firestore().collection('chats').doc('members-only-chat').get());
+  await assertFails(anonymous.firestore().collection('chats').doc('valid-chat').get());
+  await assertFails(anonymous.firestore().collection('chats').doc('valid-chat')
+      .collection('messages').doc('anonymous-message').set({
+        senderId: 'anonymous',
+        text: 'denied',
+        createdAt: new Date(),
+      }));
+});
+
+test('members-only chats cannot authorize message reads or updates', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const chat = alice.firestore().collection('chats').doc('legacy-chat');
+  const message = chat.collection('messages').doc('message-1');
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await context.firestore().collection('chats').doc('legacy-chat').set({
+      members: ['alice'],
+      createdAt: new Date(),
+    });
+    await context.firestore().collection('chats').doc('legacy-chat')
+        .collection('messages').doc('message-1').set({
+      senderId: 'alice',
+      text: 'legacy message',
+      createdAt: new Date(),
+    });
+  });
+
+  await assertFails(message.get());
+  await assertFails(message.update({ text: 'must remain denied' }));
+});
+
+test('message updates require canonical chat membership', async () => {
+  const alice = testEnv.authenticatedContext('alice');
+  const outsider = testEnv.authenticatedContext('outsider');
+  const chat = alice.firestore().collection('chats').doc('update-chat');
+  const message = chat.collection('messages').doc('message-1');
+
+  await assertSucceeds(chat.set({
+    participants: ['alice'],
+    createdAt: new Date(),
+  }));
+  await assertSucceeds(message.set({
+    senderId: 'alice',
+    text: 'original',
+    createdAt: new Date(),
+  }));
+  await assertSucceeds(message.update({ text: 'updated' }));
+  await assertFails(outsider.firestore().collection('chats').doc('update-chat')
+      .collection('messages').doc('message-1').update({ text: 'denied' }));
 });
 
 test('user cannot change authorId in a post', async () => {

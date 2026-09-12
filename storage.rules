@@ -62,12 +62,9 @@ service firebase.storage {
         isOwnerBoundUpload() &&
         request.resource.size <= maxBytes &&
         isAllowedMediaContentType() &&
-        firestore.exists(/databases/default/documents/chats/$(chatId)) && (
-          (firestore.get(/databases/default/documents/chats/$(chatId)).data.keys().hasAny(['participants'])
-            && request.auth.uid in firestore.get(/databases/default/documents/chats/$(chatId)).data.participants)
-          || (firestore.get(/databases/default/documents/chats/$(chatId)).data.keys().hasAny(['members'])
-            && request.auth.uid in firestore.get(/databases/default/documents/chats/$(chatId)).data.members)
-        );
+        firestore.exists(/databases/(default)/documents/chats/$(chatId)) &&
+        firestore.get(/databases/(default)/documents/chats/$(chatId)).data.keys().hasAny(['participants']) &&
+        request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants;
     }
 
     match /users/{userId}/avatar.* {
@@ -101,11 +98,9 @@ service firebase.storage {
     }
 
     match /chats/{chatId}/{fileName} {
-      allow read: if isAuth() && firestore.exists(/databases/default/documents/chats/$(chatId)) && (
-        (firestore.get(/databases/default/documents/chats/$(chatId)).data.keys().hasAny(['participants'])
-          && request.auth.uid in firestore.get(/databases/default/documents/chats/$(chatId)).data.participants)
-        || (firestore.get(/databases/default/documents/chats/$(chatId)).data.keys().hasAny(['members'])
-          && request.auth.uid in firestore.get(/databases/default/documents/chats/$(chatId)).data.members)
+      allow read: if isAuth() && firestore.exists(/databases/(default)/documents/chats/$(chatId)) && (
+        firestore.get(/databases/(default)/documents/chats/$(chatId)).data.keys().hasAny(['participants'])
+        && request.auth.uid in firestore.get(/databases/(default)/documents/chats/$(chatId)).data.participants
       );
       allow write: if isValidChatUpload(chatId, 25 * 1024 * 1024);
       allow delete: if isAuth() && resource.metadata.ownerUid == request.auth.uid;
@@ -116,7 +111,12 @@ service firebase.storage {
       allow write: if isAdmin() && request.resource.size <= 10 * 1024 * 1024 && isAllowedMediaContentType();
     }
 
-    match /{allPaths=**} {
+    match /{topLevel}/{allPaths=**} {
+      allow read: if isAuth() && topLevel != 'chats';
+      allow write: if false;
+    }
+
+    match /{fileName} {
       allow read: if isAuth();
       allow write: if false;
     }

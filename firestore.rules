@@ -51,13 +51,11 @@ service cloud.firestore {
       );
     }
 
-    // Chat membership helper: accept both canonical participants and legacy members
+    // Chat membership is determined exclusively by the canonical participants array.
     function isChatMember(chatId) {
       return exists(/databases/$(database)/documents/chats/$(chatId)) && (
         (get(/databases/$(database)/documents/chats/$(chatId)).data.keys().hasAny(['participants'])
           && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants)
-        || (get(/databases/$(database)/documents/chats/$(chatId)).data.keys().hasAny(['members'])
-          && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members)
       );
     }
 
@@ -368,21 +366,21 @@ service cloud.firestore {
 
     // --- Chats ---
     match /chats/{chatId} {
-      // Chat documents must include the creator in either the canonical participants array
-      // or the legacy members array. This preserves compatibility while normalizing access.
-      allow read: if isAuth() && isChatMember(chatId);
+      // Chat documents must include the creator in the canonical participants array.
+      allow read: if isAuth()
+        && request.auth.uid in resource.data.participants;
       allow create: if isAuth() && (
-        (request.resource.data.participants is list && request.auth.uid in request.resource.data.participants)
-        || (request.resource.data.members is list && request.auth.uid in request.resource.data.members)
+        request.resource.data.participants is list
+        && request.auth.uid in request.resource.data.participants
       );
       allow delete: if isServer() || tokenClaimEquals('admin', true);
 
       match /messages/{messageId} {
         allow create: if isAuth() && request.resource.data.senderId == request.auth.uid && isChatMember(chatId);
         allow read: if isAuth() && isChatMember(chatId);
-        allow update: if isAuth() && (
+        allow update: if isAuth() && isChatMember(chatId) && (
           (request.auth.uid == resource.data.senderId && request.resource.data.senderId == resource.data.senderId)
-          || (request.resource.data.keys().hasOnly(['isRead','deliveredAt']) && isChatMember(chatId))
+          || request.resource.data.keys().hasOnly(['isRead','deliveredAt'])
         );
         allow delete: if isServer() || tokenClaimEquals('admin', true);
       }
